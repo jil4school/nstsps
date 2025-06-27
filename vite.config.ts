@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
+  base: "/nstsps/",
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'), // ⬅️ This enables @ to point to /src
