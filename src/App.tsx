@@ -13,14 +13,14 @@ function App() {
             Student Information
           </span>
           <div className="flex flex-col pl-10">
-            <Button variant="link" className="text-white text-xl justify-start">
+            <Button variant="link" className="text-white text-xl justify-start cursor-pointer">
               Master File
             </Button>
 
-            <Button variant="link" className="text-white text-xl justify-start">
+            <Button variant="link" className="text-white text-xl justify-start cursor-pointer">
               Registration Details
             </Button>
-            <Button variant="link" className="text-white text-xl justify-start">
+            <Button variant="link" className="text-white text-xl justify-start cursor-pointer">
               Grades Display
             </Button>
           </div>
@@ -28,13 +28,13 @@ function App() {
             Student Services
           </span>
           <div className="flex flex-col pl-10">
-            <Button variant="link" className="text-white text-xl justify-start">
+            <Button variant="link" className="text-white text-xl justify-start cursor-pointer">
               Request Form
             </Button>
           </div>
           <span className="my-class text-white text-2xl mt-10">Utilities</span>
           <div className="flex flex-col pl-10">
-            <Button variant="link" className="text-white text-xl justify-start">
+            <Button variant="link" className="text-white text-xl justify-start cursor-pointer">
               Change Own Password
             </Button>
           </div>
@@ -46,7 +46,7 @@ function App() {
             height="30"
             className=" text-white pr-0"
           />
-            <Button variant="link" className="p-1 text-white text-xl justify-start">
+            <Button variant="link" className="p-1 text-white text-xl justify-start cursor-pointer">
               Logout
             </Button>
           </div>
