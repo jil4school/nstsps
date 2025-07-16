@@ -2,9 +2,10 @@ import NST from "./assets/NST.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "./components/ui/input";
 import { Icon } from "@iconify/react";
+import { Link } from "react-router-dom";
 function LandingPage() {
   return (
-    <div className="flex flex-row justify-center items-center h-screen w-screen bg-gray-100">
+    <div className="flex flex-row justify-center items-center h-screen w-screen bg-white">
       <img
         className="sm:w-[200px] md:w-[300px] lg:w-[500px] xl:w-[605px]"
         src={NST}
@@ -49,12 +50,14 @@ function LandingPage() {
           />
         </div>
         <div className="flex justify-center mb-3">
-          <Button
-            className="text-white hover:opacity-70 cursor-pointer"
-            style={{ background: "#0F88B6" }}
-          >
-            Login
-          </Button>
+          <Link to={"/nstsps/student-home"}>
+            <Button
+              className="text-white hover:opacity-70 cursor-pointer"
+              style={{ background: "#0F88B6" }}
+            >
+              Login
+            </Button>
+          </Link>
         </div>
         <div className="flex justify-center">
           <Button
