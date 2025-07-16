@@ -254,6 +254,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <RadioGroup
+                      required
                         defaultValue="Male"
                         className="flex flex-row space-x-4"
                       >
@@ -290,6 +291,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Input
+                      required
                         placeholder="Nationality"
                         {...field}
                         className="w-110"
@@ -311,7 +313,7 @@ function MasterFile() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Select>
+                      <Select required>
                         <SelectTrigger className=" placeholder:text-slate-400 text-gray-500 border-black w-110">
                           <SelectValue placeholder="Civil Status" />
                         </SelectTrigger>
@@ -335,6 +337,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Input
+                      required
                         placeholder="Religion"
                         {...field}
                         className="w-110"
@@ -357,7 +360,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <div className="relative w-fit">
-                        <Input
+                        <Input required
                           id="date"
                           value={field.value ?? ""}
                           placeholder="Birthday"
@@ -447,7 +450,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Input
-                        placeholder="Street"
+                        placeholder="House No. , Street"
                         {...field}
                         className="w-110"
                         onChange={(e) =>
@@ -527,14 +530,14 @@ function MasterFile() {
               />
             </div>
             <div className="flex flex-row mt-5 items-center">
-              <span className="pl-15 w-100">Mobile Number:</span>
+              <span className="pl-15 w-100">Mobile Number*:</span>
               <FormField
                 control={form.control}
                 name="mobile_number"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
+                      <Input required
                         type="number"
                         placeholder="Mobile Number"
                         {...field}
