@@ -552,10 +552,10 @@ function MasterFile() {
                 )}
               />
             </div>
-            <div style={{ background: "#919090" }} className="w-auto mt-14">
+            <div style={{ background: "#919090" }} className="w-auto mt-14 mb-8">
               <span className="text-white pl-15">IN CASE OF EMERGENCY</span>
             </div>
-            <span className="pl-15 mt-10" style={{ color: "#B71C1C" }}>
+            <span className="pl-15" style={{ color: "#B71C1C" }}>
               GUARDIAN INFORMATION
             </span>
             <div className="flex flex-row mt-5 items-center">
