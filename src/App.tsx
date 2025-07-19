@@ -17,7 +17,7 @@ const routes = [
     element: <StudentHome />,
   },
   {
-    path: "/nststs/student-services/request-form",
+    path: "/nstsps/student-services/request-form",
     element: <StudentHome />,
   },
   {
