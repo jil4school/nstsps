@@ -2,14 +2,15 @@ import { Route, Routes } from "react-router-dom";
 import LandingPage from "./landing-page";
 import StudentHome from "./student-home";
 import MasterFile from "./master-file";
+import RegistrationDetails from "./registration-details";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
   { path: "/nstsps/student-home", element: <StudentHome /> },
   { path: "/nstsps/student-info/master-file", element: <MasterFile /> },
   {
-    path: "/nststs/student-info/registration-details",
-    element: <StudentHome />,
+    path: "/nstsps/student-info/registration-details",
+    element: <RegistrationDetails />,
   },
   {
     path: "/nststs/student-info/grades-display",
