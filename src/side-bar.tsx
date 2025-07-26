@@ -16,6 +16,7 @@ function SideBar() {
     },
     { label: "Grades Display", path: "/nstsps/student-info/grades-display" },
     { label: "Request Form", path: "/nstsps/student-services/request-form" },
+    { label: "Accounting", path: "/nstsps/student-services/accounting" },
     { label: "Change Own Password", path: "/nstsps/utilities/change-password" },
   ];
 
@@ -55,26 +56,31 @@ function SideBar() {
             Student Services
           </span>
           <div className="flex flex-col pl-10">
-            <Link to={menuItems[3].path}>
-              <Button
-                variant="link"
-                className={`
-                  text-xl justify-start cursor-pointer w-full text-left
-                  ${
-                    currentPath === menuItems[3].path
-                      ? "rounded-none rounded-l-3xl bg-white"
-                      : ""
-                  }
-                `}
-                style={{
-                  color:
-                    currentPath === menuItems[3].path ? "#00ACED" : "#ffffff",
-                }}
-              >
-                {menuItems[3].label}
-              </Button>
-            </Link>
+            {[3, 4].map((index) => (
+              <Link to={menuItems[index].path} key={index}>
+                <Button
+                  variant="link"
+                  className={`
+          text-xl justify-start cursor-pointer w-full text-left
+          ${
+            currentPath === menuItems[index].path
+              ? "rounded-none rounded-l-3xl bg-white"
+              : ""
+          }
+        `}
+                  style={{
+                    color:
+                      currentPath === menuItems[index].path
+                        ? "#00ACED"
+                        : "#ffffff",
+                  }}
+                >
+                  {menuItems[index].label}
+                </Button>
+              </Link>
+            ))}
           </div>
+
           <span className="my-class text-white text-2xl mt-10">Utilities</span>
           <div className="flex flex-col pl-10">
             <Link to={menuItems[4].path}>
@@ -83,17 +89,17 @@ function SideBar() {
                 className={`
                   text-xl justify-start cursor-pointer w-full text-left
                   ${
-                    currentPath === menuItems[4].path
+                    currentPath === menuItems[5].path
                       ? "rounded-none rounded-l-3xl bg-white"
                       : ""
                   }
                 `}
                 style={{
                   color:
-                    currentPath === menuItems[4].path ? "#00ACED" : "#ffffff",
+                    currentPath === menuItems[5].path ? "#00ACED" : "#ffffff",
                 }}
               >
-                {menuItems[4].label}
+                {menuItems[5].label}
               </Button>
             </Link>
           </div>
@@ -121,7 +127,6 @@ function SideBar() {
         alt="Logo"
         className="fixed top-5 left-54 w-[436px] h-[85px] transform -translate-x-1/2 z-50"
       />
-      
     </>
   );
 }

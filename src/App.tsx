@@ -3,6 +3,7 @@ import LandingPage from "./landing-page";
 import StudentHome from "./student-home";
 import MasterFile from "./master-file";
 import RegistrationDetails from "./registration-details";
+import RequestForm from "./request-form";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -13,12 +14,16 @@ const routes = [
     element: <RegistrationDetails />,
   },
   {
+    path: "/nstsps/student-info/grades-display",
+    element: <RegistrationDetails />,
+  },
+  {
     path: "/nststs/student-info/grades-display",
     element: <StudentHome />,
   },
   {
     path: "/nstsps/student-services/request-form",
-    element: <StudentHome />,
+    element: <RequestForm />,
   },
   {
     path: "/nststs/utilities/change-password",
