@@ -37,24 +37,24 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         response.data &&
         (response.data.success === true || response.data.success === "true")
       ) {
-        setUser({ user_id: response.data.user_id, email });
+        const userId = response.data.user_id;
+        setUser({ user_id: userId, email });
+        localStorage.setItem("user_id", String(userId)); // ✅ store in localStorage
         setError(null);
         return true;
-      } else {
-        setError(response.data.error || "Login failed");
-        return false;
       }
+
+      // ❗ If response was not successful
+      setError("Login failed: Invalid credentials");
+      return false;
     } catch (err: any) {
-  const message =
-    err.response?.data?.error ??
-    err.message ??
-    "Login request failed";
+      const message =
+        err.response?.data?.error ?? err.message ?? "Login request failed";
 
-  console.error("Axios error:", err);
-  setError(message);
-  return false;
-}
-
+      console.error("Axios error:", err);
+      setError(message);
+      return false;
+    }
   };
 
   const logout = () => {

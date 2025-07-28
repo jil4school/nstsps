@@ -4,12 +4,15 @@ import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { LoginProvider } from "./context/login-context.tsx";
+import { MasterFileProvider } from "./context/master-file-context.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <LoginProvider>
-        <App />
+        <MasterFileProvider>
+          <App />
+        </MasterFileProvider>
       </LoginProvider>
     </BrowserRouter>
   </StrictMode>

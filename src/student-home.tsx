@@ -1,6 +1,17 @@
+import { useEffect } from "react";
 import SideBar from "./side-bar";
+import { useMasterFile } from "@/context/master-file-context"; 
 
 function StudentHome() {
+ const { student, fetchStudentInfo } = useMasterFile();
+
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+    console.log(userId);
+    if (userId) {
+      fetchStudentInfo(userId);
+    }
+  }, [fetchStudentInfo]);
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <SideBar />
@@ -15,7 +26,7 @@ function StudentHome() {
         </div>
         <div className="ml-100  mt-10">
           <span className="text-5xl p-10" style={{ color: "#919090" }}>
-            Hello, JIL IRIS!
+            Hello, {student?.first_name || "Student"}!
           </span>
           <div
             className="ml-10 w-[840px] h-[42px] mt-3"
@@ -43,13 +54,13 @@ function StudentHome() {
             </div>
             <div className="flex flex-col pt-2 pl-12">
               <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
-                202210047
+                {student?.student_id || "000000000"}
               </span>
               <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
-                DELA CRUZ, JIL IRIS ATIENZA
+                {student?.surname || "LN"}, {student?.first_name || "FN"} {student?.middle_name || "MN"}
               </span>
               <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
-                F
+                {student?.gender || "N/A"}
               </span>
               <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
                 1st Semester of SY 2025-2026
