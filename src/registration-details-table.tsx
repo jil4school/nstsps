@@ -6,39 +6,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const registrations = [
-  {
-    studentId: "SID001",
-    studentName: "Jewel Lei Tabbada",
-    regDate: "2025-06-15",
-    semester: "1st Semester",
-    program: "BSIT",
-  },
-  {
-    studentId: "SID002",
-    studentName: "John Doe",
-    regDate: "2025-06-16",
-    semester: "1st Semester",
-    program: "BSCS",
-  },
-  {
-    studentId: "SID003",
-    studentName: "Jane Smith",
-    regDate: "2025-06-17",
-    semester: "2nd Semester",
-    program: "BSECE",
-  },
-  {
-    studentId: "SID004",
-    studentName: "Carlos Reyes",
-    regDate: "2025-06-18",
-    semester: "2nd Semester",
-    program: "BSCE",
-  },
-];
+import { useRegistrationContext } from "@/context/registration-context";
 
 function RegistrationDetailsTable() {
+  const { registrations, loading, error } = useRegistrationContext();
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
   return (
     <Table>
       <TableHeader className="bg-[#919090] text-white">
@@ -58,9 +33,9 @@ function RegistrationDetailsTable() {
           >
             <TableCell className="font-medium">{student.studentId}</TableCell>
             <TableCell>{student.studentName}</TableCell>
-            <TableCell>{student.regDate}</TableCell>
-            <TableCell>{student.semester}</TableCell>
-            <TableCell>{student.program}</TableCell>
+            <TableCell>{student.registration_date}</TableCell>
+            <TableCell>{student.sem}</TableCell>
+            <TableCell>{student.program_name}</TableCell>
           </TableRow>
         ))}
       </TableBody>

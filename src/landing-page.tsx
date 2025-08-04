@@ -28,7 +28,6 @@ function LandingPage() {
   const navigate = useNavigate();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-  console.log("Submitting values:", values);
 
   const success = await login(values.email, values.password);
 

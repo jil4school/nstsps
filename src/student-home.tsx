@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import SideBar from "./side-bar";
 import { useMasterFile } from "@/context/master-file-context"; 
+import Header from "./header";
 
 function StudentHome() {
  const { student, fetchStudentInfo } = useMasterFile();
@@ -15,15 +16,8 @@ function StudentHome() {
     <div className="flex flex-row h-screen w-screen bg-white">
       <SideBar />
       <div className="flex flex-col w-full">
-        <div className="flex justify-center">
-          <span
-            className="my-class text-white text-6xl mx-auto mt-8"
-            style={{ color: "#00ACED" }}
-          >
-            STUDENT PORTAL
-          </span>
-        </div>
-        <div className="ml-100  mt-10">
+       <Header />
+        <div className="ml-100  mt-35">
           <span className="text-5xl p-10" style={{ color: "#919090" }}>
             Hello, {student?.first_name || "Student"}!
           </span>

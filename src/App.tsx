@@ -4,6 +4,7 @@ import StudentHome from "./student-home";
 import MasterFile from "./master-file";
 import RegistrationDetails from "./registration-details";
 import RequestForm from "./request-form";
+import GradesDisplay from "./grades-display";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -15,7 +16,7 @@ const routes = [
   },
   {
     path: "/nstsps/student-info/grades-display",
-    element: <RegistrationDetails />,
+    element: <GradesDisplay />,
   },
   {
     path: "/nststs/student-info/grades-display",

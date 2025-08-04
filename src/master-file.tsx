@@ -5,7 +5,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "./components/ui/form";
 import { Input } from "./components/ui/input";
@@ -18,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import * as React from "react";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,7 +29,7 @@ import Header from "./header";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMasterFile } from "./context/master-file-context";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useProgram } from "@/context/miscellaneous-context";
 
 const formSchema = z.object({
@@ -59,17 +57,6 @@ const formSchema = z.object({
   guardian_email: z.string(),
 });
 
-function formatDate(date: Date | undefined) {
-  if (!date) {
-    return "";
-  }
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 function isValidDate(date: Date | undefined) {
   if (!date) {
     return false;
@@ -93,9 +80,6 @@ function MasterFile() {
         student_id: student?.student_id,
         user_id: student?.user_id,
       });
-      console.log("Submitted birthday:", values.birthday);
-
-      console.log("Student info updated successfully!");
     } catch (error: any) {
       console.error("Update failed:", error);
     }
@@ -167,11 +151,11 @@ function MasterFile() {
       });
     }
   }, [student]);
-  const [open, setOpen] = React.useState(false);
-  const [date, setDate] = React.useState<Date | undefined>(
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState<Date | undefined>(
     new Date("2025-06-01")
   );
-  const [month, setMonth] = React.useState<Date | undefined>(date);
+  const [month, setMonth] = useState<Date | undefined>(date);
 
   return (
     <div className="flex flex-row h-screen w-screen bg-white">

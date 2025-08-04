@@ -27,6 +27,7 @@ interface StudentInfo {
   guardian_mobile_number?: string;
   guardian_email?: string;
 }
+
 interface MasterFileContextType {
   student: StudentInfo | null;
   fetchStudentInfo: (user_id: string) => Promise<void>;
@@ -52,7 +53,6 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
       if (response.data && !response.data.error) {
         setStudent(response.data);
         setError(null);
-        console.log(response.data);
       } else {
         setError(response.data.error || "Failed to fetch student info");
         setStudent(null);
@@ -79,7 +79,6 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (response.data && !response.data.error) {
-        console.log("Update successful");
         if (data.user_id) {
           await fetchStudentInfo(data.user_id); // still reload the data by user_id
         }
