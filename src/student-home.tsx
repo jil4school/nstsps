@@ -7,11 +7,10 @@ function StudentHome() {
 
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
-    console.log(userId);
     if (userId) {
       fetchStudentInfo(userId);
     }
-  }, [fetchStudentInfo]);
+  }, []);
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <SideBar />

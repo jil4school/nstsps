@@ -66,7 +66,6 @@ function LandingPage() {
                 }}
                 className="grid gap-4"
               >
-                {/* Email Field */}
                 <div className="relative">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +95,6 @@ function LandingPage() {
                   />
                 </div>
 
-                {/* Password Field */}
                 <div className="relative">
                   <Icon
                     icon="mdi:password"

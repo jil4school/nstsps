@@ -5,6 +5,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "./components/ui/form";
 import { Input } from "./components/ui/input";
@@ -29,10 +30,13 @@ import {
 import Header from "./header";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMasterFile } from "./context/master-file-context";
+import { useEffect } from "react";
+import { useProgram } from "@/context/miscellaneous-context";
 
 const formSchema = z.object({
   student_id: z.number(),
-  program: z.string(),
+  program_id: z.string(),
   surname: z.string(),
   first_name: z.string(),
   middle_name: z.string(),
@@ -55,14 +59,6 @@ const formSchema = z.object({
   guardian_email: z.string(),
 });
 
-async function onSubmit(values: z.infer<typeof formSchema>) {
-  try {
-    console.log("Form submitted with values:", values);
-  } catch (error: any) {
-    console.error("Unexpected error:", error);
-  }
-}
-
 function formatDate(date: Date | undefined) {
   if (!date) {
     return "";
@@ -82,33 +78,95 @@ function isValidDate(date: Date | undefined) {
 }
 
 function MasterFile() {
+  const { programs } = useProgram();
+  const { student, fetchStudentInfo, updateStudentInfo } = useMasterFile();
+  const onSubmit = async (values: any) => {
+    const [surname = "", firstName = ""] = (values.guardian_name || "")
+      .split(",")
+      .map((str: string) => str.trim());
+
+    try {
+      await updateStudentInfo({
+        ...values,
+        guardian_surname: surname,
+        guardian_first_name: firstName,
+        student_id: student?.student_id,
+        user_id: student?.user_id,
+      });
+      console.log("Submitted birthday:", values.birthday);
+
+      console.log("Student info updated successfully!");
+    } catch (error: any) {
+      console.error("Update failed:", error);
+    }
+  };
+
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+    if (userId) {
+      fetchStudentInfo(userId);
+    }
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      student_id: 0,
-      program: "",
-      surname: "",
-      first_name: "",
-      middle_name: "",
-      gender: "",
-      nationality: "",
-      civil_status: "",
-      religion: "",
-      birthday: "",
-      birthplace: "",
-      street: "",
-      barangay: "",
-      region: "",
-      municipality: "",
-      mobile_number: "",
-      guardian_name: "",
-      guardian_surname: "",
-      guardian_first_name: "",
-      relation_with_the_student: "",
-      guardian_mobile_number: "",
-      guardian_email: "",
+      student_id: Number(student?.student_id) || 0,
+      program_id: String(student?.program_name) || "",
+      surname: student?.surname || "",
+      first_name: student?.first_name || "",
+      middle_name: student?.middle_name || "",
+      gender: student?.gender || "",
+      nationality: student?.nationality || "",
+      civil_status: student?.civil_status || "",
+      religion: student?.religion || "",
+      birthday: student?.birthday || "",
+      birthplace: student?.birthplace || "",
+      street: student?.street || "",
+      barangay: student?.barangay || "",
+      region: student?.region || "",
+      municipality: student?.municipality || "",
+      mobile_number: student?.mobile_number || "",
+      guardian_name: `${student?.guardian_surname || ""}, ${
+        student?.guardian_first_name || ""
+      }`,
+      guardian_surname: student?.guardian_surname || "",
+      guardian_first_name: student?.guardian_first_name || "",
+      relation_with_the_student: student?.relation_with_the_student || "",
+      guardian_mobile_number: student?.guardian_mobile_number || "",
+      guardian_email: student?.guardian_email || "",
     },
   });
+  useEffect(() => {
+    if (student) {
+      form.reset({
+        student_id: Number(student?.student_id) || 0,
+        program_id: String(student?.program_id) || "",
+        surname: student?.surname || "",
+        first_name: student?.first_name || "",
+        middle_name: student?.middle_name || "",
+        gender: student?.gender || "",
+        nationality: student?.nationality || "",
+        civil_status: student?.civil_status || "",
+        religion: student?.religion || "",
+        birthday: student?.birthday || "",
+        birthplace: student?.birthplace || "",
+        street: student?.street || "",
+        barangay: student?.barangay || "",
+        region: student?.region || "",
+        municipality: student?.municipality || "",
+        mobile_number: student?.mobile_number || "",
+        guardian_name: `${student?.guardian_surname || ""}, ${
+          student?.guardian_first_name || ""
+        }`,
+        guardian_surname: student?.guardian_surname || "",
+        guardian_first_name: student?.guardian_first_name || "",
+        relation_with_the_student: student?.relation_with_the_student || "",
+        guardian_mobile_number: student?.guardian_mobile_number || "",
+        guardian_email: student?.guardian_email || "",
+      });
+    }
+  }, [student]);
   const [open, setOpen] = React.useState(false);
   const [date, setDate] = React.useState<Date | undefined>(
     new Date("2025-06-01")
@@ -143,9 +201,7 @@ function MasterFile() {
                         {...field}
                         disabled
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -157,25 +213,36 @@ function MasterFile() {
               <span className="pl-15 w-100">Program:</span>
               <FormField
                 control={form.control}
-                name="program"
+                name="program_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        placeholder="Program"
-                        {...field}
+                      <Select
+                        value={field.value?.toString()}
+                        onValueChange={field.onChange}
                         disabled
-                        className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
-                      />
+                      >
+                        <SelectTrigger className="w-110">
+                          <SelectValue placeholder="Select a program" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white text-black w-110">
+                          {programs.map((program) => (
+                            <SelectItem
+                              key={program.program_id}
+                              value={program.program_id.toString()}
+                            >
+                              {program.program_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
             <div className="flex flex-row mt-5 items-center">
               <span className="pl-15 w-100">Surname*:</span>
               <FormField
@@ -189,9 +256,7 @@ function MasterFile() {
                         {...field}
                         disabled
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -212,9 +277,7 @@ function MasterFile() {
                         {...field}
                         disabled
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -235,9 +298,7 @@ function MasterFile() {
                         {...field}
                         disabled
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -254,23 +315,23 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <RadioGroup
-                      required
-                        defaultValue="Male"
+                        required
+                        value={field.value} // ✅ bind value
+                        onValueChange={field.onChange} // ✅ bind onChange
                         className="flex flex-row space-x-4"
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem
-                            value="Male"
-                            id="Male"
+                            value="M"
+                            id=" M"
                             className="data-[state=checked]:bg-[#1BB2EF]"
                           />
-
                           <Label htmlFor="Male">M</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem
-                            value="Female"
-                            id="Female"
+                            value="F"
+                            id="F"
                             className="data-[state=checked]:bg-[#1BB2EF]"
                           />
                           <Label htmlFor="Female">F</Label>
@@ -291,13 +352,11 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Input
-                      required
+                        required
                         placeholder="Nationality"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -313,8 +372,12 @@ function MasterFile() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Select required>
-                        <SelectTrigger className=" placeholder:text-slate-400 text-gray-500 border-black w-110">
+                      <Select
+                        required
+                        value={field.value} // ✅ bind value
+                        onValueChange={field.onChange} // ✅ bind onChange
+                      >
+                        <SelectTrigger className="placeholder:text-slate-400 text-gray-500 border-black w-110">
                           <SelectValue placeholder="Civil Status" />
                         </SelectTrigger>
                         <SelectContent className="bg-white text-black">
@@ -337,13 +400,11 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Input
-                      required
+                        required
                         placeholder="Religion"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -360,11 +421,11 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <div className="relative w-fit">
-                        <Input required
+                        <Input
+                          required
                           id="date"
                           value={field.value ?? ""}
                           placeholder="Birthday"
-                          disabled
                           className="bg-background pr-10 w-110"
                           onChange={(e) => {
                             const date = new Date(e.target.value);
@@ -381,6 +442,7 @@ function MasterFile() {
                             }
                           }}
                         />
+
                         <Popover open={open} onOpenChange={setOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -405,9 +467,14 @@ function MasterFile() {
                               month={month}
                               onMonthChange={setMonth}
                               onSelect={(date) => {
-                                setDate(date);
-                                field.onChange(formatDate(date));
-                                setOpen(false);
+                                if (date) {
+                                  const formatted =
+                                    date.toLocaleDateString("en-CA"); // ✅ Formats as YYYY-MM-DD in local time
+
+                                  setDate(date);
+                                  field.onChange(formatted);
+                                  setOpen(false);
+                                }
                               }}
                             />
                           </PopoverContent>
@@ -431,9 +498,7 @@ function MasterFile() {
                         placeholder="Place of Birth"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -453,9 +518,7 @@ function MasterFile() {
                         placeholder="House No. , Street"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -475,9 +538,7 @@ function MasterFile() {
                         placeholder="Barangay"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -497,9 +558,7 @@ function MasterFile() {
                         placeholder="Region"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -519,9 +578,7 @@ function MasterFile() {
                         placeholder="Municipality"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -537,14 +594,13 @@ function MasterFile() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input required
-                        type="number"
+                      <Input
+                        required
+                        type="text"
                         placeholder="Mobile Number"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -552,7 +608,10 @@ function MasterFile() {
                 )}
               />
             </div>
-            <div style={{ background: "#919090" }} className="w-auto mt-14 mb-8">
+            <div
+              style={{ background: "#919090" }}
+              className="w-auto mt-14 mb-8"
+            >
               <span className="text-white pl-15">IN CASE OF EMERGENCY</span>
             </div>
             <span className="pl-15" style={{ color: "#B71C1C" }}>
@@ -571,7 +630,7 @@ function MasterFile() {
                         {...field}
                         className="w-110"
                         onChange={(e) => {
-                          const value = e.target.value.toUpperCase();
+                          const value = e.target.value;
                           field.onChange(value); // sets guardian_name
 
                           const [surname = "", firstName = ""] = value
@@ -599,9 +658,7 @@ function MasterFile() {
                         placeholder="Ex. Mother"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -618,13 +675,11 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
                         placeholder="Mobile Number"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -645,9 +700,7 @@ function MasterFile() {
                         placeholder="Email Address"
                         {...field}
                         className="w-110"
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                     <FormMessage />

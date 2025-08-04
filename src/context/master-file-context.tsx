@@ -4,22 +4,40 @@ import type { ReactNode, Dispatch, SetStateAction } from "react";
 
 interface StudentInfo {
   user_id: string;
-  first_name: string;
+  student_id: string;
+  program_id: string;
+  program_name: string;
   surname: string;
-  gender?: string;
-  enrollment?: string;
-  student_id?: string;
+  first_name: string;
   middle_name?: string;
+  gender?: string;
+  nationality?: string;
+  civil_status?: string;
+  religion?: string;
+  birthday?: string;
+  birthplace?: string;
+  street?: string;
+  barangay?: string;
+  region?: string;
+  municipality?: string;
+  mobile_number?: string;
+  guardian_surname?: string;
+  guardian_first_name?: string;
+  relation_with_the_student?: string;
+  guardian_mobile_number?: string;
+  guardian_email?: string;
 }
-
 interface MasterFileContextType {
   student: StudentInfo | null;
   fetchStudentInfo: (user_id: string) => Promise<void>;
+  updateStudentInfo: (data: Partial<StudentInfo>) => Promise<void>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
 }
 
-const MasterFileContext = createContext<MasterFileContextType | undefined>(undefined);
+const MasterFileContext = createContext<MasterFileContextType | undefined>(
+  undefined
+);
 
 export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
   const [student, setStudent] = useState<StudentInfo | null>(null);
@@ -31,18 +49,19 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         `http://localhost/NSTSPS_API/controller/MasterFileController.php?user_id=${user_id}`
       );
 
-      console.log("Student info response:", response.data.first_name);
-
       if (response.data && !response.data.error) {
         setStudent(response.data);
         setError(null);
+        console.log(response.data);
       } else {
         setError(response.data.error || "Failed to fetch student info");
         setStudent(null);
       }
     } catch (err: any) {
       const message =
-        err.response?.data?.error ?? err.message ?? "Student info request failed";
+        err.response?.data?.error ??
+        err.message ??
+        "Student info request failed";
 
       console.error("Axios error (student):", err);
       setError(message);
@@ -50,10 +69,37 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateStudentInfo = async (
+    data: Partial<StudentInfo>
+  ): Promise<void> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/MasterFileController.php",
+        data
+      );
+
+      if (response.data && !response.data.error) {
+        console.log("Update successful");
+        if (data.user_id) {
+          await fetchStudentInfo(data.user_id); // still reload the data by user_id
+        }
+      } else {
+        console.error("Update error:", response.data.error);
+        setError(response.data.error || "Failed to update student info");
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Student update failed";
+      console.error("Axios error (update):", err);
+      setError(message);
+    }
+  };
+
   const value: MasterFileContextType = {
     student,
     fetchStudentInfo,
     error,
+    updateStudentInfo,
     setError,
   };
 

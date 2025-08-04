@@ -29,17 +29,13 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      console.log("RAW response object:", response);
-      console.log("RAW response data:", response.data);
-      console.log("Type of success:", typeof response.data.success);
-
       if (
         response.data &&
         (response.data.success === true || response.data.success === "true")
       ) {
         const userId = response.data.user_id;
         setUser({ user_id: userId, email });
-        localStorage.setItem("user_id", String(userId)); // ✅ store in localStorage
+        localStorage.setItem("user_id", String(userId));
         setError(null);
         return true;
       }
