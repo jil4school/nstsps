@@ -300,8 +300,8 @@ function MasterFile() {
                     <FormControl>
                       <RadioGroup
                         required
-                        value={field.value} // ✅ bind value
-                        onValueChange={field.onChange} // ✅ bind onChange
+                        value={field.value}
+                        onValueChange={field.onChange}
                         className="flex flex-row space-x-4"
                       >
                         <div className="flex items-center space-x-2">
@@ -358,8 +358,8 @@ function MasterFile() {
                     <FormControl>
                       <Select
                         required
-                        value={field.value} // ✅ bind value
-                        onValueChange={field.onChange} // ✅ bind onChange
+                        value={field.value} 
+                        onValueChange={field.onChange} 
                       >
                         <SelectTrigger className="placeholder:text-slate-400 text-gray-500 border-black w-110">
                           <SelectValue placeholder="Civil Status" />
@@ -453,7 +453,7 @@ function MasterFile() {
                               onSelect={(date) => {
                                 if (date) {
                                   const formatted =
-                                    date.toLocaleDateString("en-CA"); // ✅ Formats as YYYY-MM-DD in local time
+                                    date.toLocaleDateString("en-CA");
 
                                   setDate(date);
                                   field.onChange(formatted);
@@ -615,7 +615,7 @@ function MasterFile() {
                         className="w-110"
                         onChange={(e) => {
                           const value = e.target.value;
-                          field.onChange(value); // sets guardian_name
+                          field.onChange(value); 
 
                           const [surname = "", firstName = ""] = value
                             .split(",")

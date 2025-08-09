@@ -43,7 +43,6 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Optional: auto-fetch on mount
   useEffect(() => {
     fetchPrograms();
   }, []);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -10,15 +10,18 @@ import {
 import { useRegistrationContext } from "@/context/registration-context";
 import logo from "./assets/logoo.png";
 import { useMasterFile } from "./context/master-file-context";
+import { useGradesContext } from "@/context/grades-context";
 
 function GradesDisplayTable() {
   const [selectedRegistration, setSelectedRegistration] = useState<any | null>(
     null
   );
+  const { grades, fetchGrades } = useGradesContext();
 
   const { registrations, loading, error, getRegistrationById } =
     useRegistrationContext();
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
   const { student, fetchStudentInfo } = useMasterFile();
 
   useEffect(() => {
@@ -31,16 +34,46 @@ function GradesDisplayTable() {
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
-  const handleRowClick = async (studentId: string, registrationId: string) => {
-    if (expandedRow === studentId) {
+  const handleRowClick = async (registrationId: string) => {
+    if (expandedRow === registrationId) {
       setExpandedRow(null);
       setSelectedRegistration(null);
     } else {
-      setExpandedRow(studentId);
+      setExpandedRow(registrationId);
       const reg = await getRegistrationById(registrationId);
       setSelectedRegistration(reg);
+
+      if (reg?.studentId && reg?.registration_id) {
+        await fetchGrades(reg.studentId, reg.registration_id);
+      }
     }
   };
+  const totalUnits = grades.reduce((sum, grade) => {
+  const unit = parseFloat(grade.unit);
+  return sum + (isNaN(unit) ? 0 : unit);
+}, 0);
+
+const gwa = () => {
+  if (grades.length === 0) return 0;
+
+  let totalWeightedGrades = 0;
+  let totalUnits = 0;
+
+  grades.forEach((subject) => {
+    const grade = parseFloat(subject.grade);
+    const units = parseFloat(subject.unit); 
+
+    if (!isNaN(grade) && !isNaN(units)) {
+      totalWeightedGrades += grade * units;
+      totalUnits += units;
+    }
+  });
+
+  const gwa = totalUnits === 0 ? 0 : totalWeightedGrades / totalUnits;
+  return gwa.toFixed(2);
+};
+
+
 
   return (
     <Table>
@@ -55,12 +88,9 @@ function GradesDisplayTable() {
       </TableHeader>
       <TableBody>
         {registrations.map((studentReg, index) => (
-          <>
+          <Fragment key={studentReg.registration_id}>
             <TableRow
-              key={studentReg.studentId}
-              onClick={() =>
-                handleRowClick(studentReg.studentId, studentReg.registration_id)
-              }
+              onClick={() => handleRowClick(studentReg.registration_id)}
               className={`cursor-pointer ${
                 index % 2 === 0 ? "bg-white" : "bg-[#1BB2EF] text-white"
               } hover:bg-gray-200`}
@@ -74,7 +104,7 @@ function GradesDisplayTable() {
               <TableCell>{studentReg.program_name}</TableCell>
             </TableRow>
 
-            {expandedRow === studentReg.studentId && (
+            {expandedRow === studentReg.registration_id && (
               <TableRow className="bg-white">
                 <TableCell colSpan={5}>
                   <div className="h-fit w-full bg-red-200 p-2">
@@ -145,46 +175,46 @@ function GradesDisplayTable() {
                           </tr>
                         </thead>
                         <tbody>
-                          {/* Sample row */}
-                          <tr>
-                            <td
-                              style={{
-                                border: "1px solid #000000",
-                                textAlign: "center",
-                              }}
-                            >
-                              CS101
-                            </td>
-                            <td
-                              style={{
-                                border: "1px solid #000000",
-                                textAlign: "center",
-                              }}
-                            >
-                              Intro to CS
-                            </td>
-                            <td
-                              style={{
-                                border: "1px solid #000000",
-                                textAlign: "center",
-                              }}
-                            >
-                              3
-                            </td>
-                            <td
-                              style={{
-                                border: "1px solid #000000",
-                                textAlign: "center",
-                              }}
-                            >
-                              1.25
-                            </td>
-                          </tr>
+                          {grades.map((grade) => (
+                            <tr key={grade.grade_id}>
+                              <td
+                                style={{
+                                  border: "1px solid #000000",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {grade.course_code?.toUpperCase() || "N/A"}
+                              </td>
+                              <td
+                                style={{
+                                  border: "1px solid #000000",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {grade.course_description || "N/A"}
+                              </td>
+                              <td
+                                style={{
+                                  border: "1px solid #000000",
+                                  textAlign: "center",
+                                }}
+                              >{grade.unit || "N/A"}
+                              </td>
+                              <td
+                                style={{
+                                  border: "1px solid #000000",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {grade.grade || "N/A"}
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                       <div className="flex flex-row mt-3 justify-between text-[13px]">
-                        <span>Total No. of Units: </span>
-                        <span>GWA:</span>
+                        <span>Total No. of Units: {totalUnits}</span>
+                        <span>GWA: {gwa()}</span>
                       </div>
                       <div className="mt-2 text-[13px]">
                         <span>Legend:</span>{" "}
@@ -223,7 +253,7 @@ function GradesDisplayTable() {
                 </TableCell>
               </TableRow>
             )}
-          </>
+          </Fragment>
         ))}
       </TableBody>
     </Table>

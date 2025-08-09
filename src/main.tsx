@@ -7,6 +7,7 @@ import { LoginProvider } from "./context/login-context.tsx";
 import { MasterFileProvider } from "./context/master-file-context.tsx";
 import { ProgramProvider } from "./context/miscellaneous-context.tsx";
 import { RegistrationProvider } from "./context/registration-context.tsx";
+import { GradesProvider } from "./context/grades-context.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -15,7 +16,9 @@ createRoot(document.getElementById("root")!).render(
         <ProgramProvider>
           <MasterFileProvider>
             <RegistrationProvider>
-              <App />
+              <GradesProvider>
+                <App />
+              </GradesProvider>
             </RegistrationProvider>
           </MasterFileProvider>
         </ProgramProvider>

@@ -40,7 +40,6 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         return true;
       }
 
-      // ❗ If response was not successful
       setError("Login failed: Invalid credentials");
       return false;
     } catch (err: any) {

@@ -80,7 +80,7 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
 
       if (response.data && !response.data.error) {
         if (data.user_id) {
-          await fetchStudentInfo(data.user_id); // still reload the data by user_id
+          await fetchStudentInfo(data.user_id);
         }
       } else {
         console.error("Update error:", response.data.error);

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
-import path from 'path'; // ⬅️ Needed for resolving the alias
+import path from 'path';
 
 export default defineConfig({
   plugins: [
@@ -9,7 +9,7 @@ export default defineConfig({
   base: "/nstsps/",
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'), // ⬅️ This enables @ to point to /src
+      '@': path.resolve(__dirname, 'src'),
     },
   },
 });
