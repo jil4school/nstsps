@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 interface Program {
   program_id: string;
@@ -32,12 +33,13 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setPrograms([]);
         setError("Failed to fetch programs.");
+        toast.error("Failed to fetch programs.");
       }
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Program request failed";
 
-      console.error("Axios error (program):", err);
+      toast.error("Axios error (program):", err);
       setError(message);
       setPrograms([]);
     }

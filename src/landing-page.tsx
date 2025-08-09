@@ -126,11 +126,7 @@ function LandingPage() {
                   >
                     Login
                   </Button>
-                  {error && (
-                    <p className="text-sm text-red-500 text-center mt-2">
-                      {error}
-                    </p>
-                  )}
+                 
                 </div>
               </form>
             </Form>

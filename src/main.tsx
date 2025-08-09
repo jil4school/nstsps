@@ -9,6 +9,7 @@ import { ProgramProvider } from "./context/miscellaneous-context.tsx";
 import { RegistrationProvider } from "./context/registration-context.tsx";
 import { GradesProvider } from "./context/grades-context.tsx";
 import { RequestProvider } from "./context/request-context.tsx";
+import { Toaster } from "./components/ui/sonner.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
             <RegistrationProvider>
               <GradesProvider>
                 <RequestProvider>
+                  <Toaster />
                   <App />
                 </RequestProvider>
               </GradesProvider>

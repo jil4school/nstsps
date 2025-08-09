@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import axios from "axios";
+import { toast } from "sonner";
 
 type Grade = {
   grade_id: string;
@@ -41,7 +42,7 @@ export const GradesProvider = ({ children }: { children: React.ReactNode }) => {
       );
 
       if (!Array.isArray(response.data)) {
-        console.error("Expected an array of grades but got:", response.data);
+        toast.error("No grade records found:", response.data);
         setGrades([]);
         setError("No grade records found.");
         return;
@@ -60,7 +61,9 @@ export const GradesProvider = ({ children }: { children: React.ReactNode }) => {
 
       setGrades(formattedGrades);
     } catch (err) {
-      console.error("Error fetching grades:", err);
+      toast.error(
+        `Error fetching grades: ${err instanceof Error ? err.message : String(err)}`
+      );
       setGrades([]);
       setError("Failed to fetch grades.");
     } finally {

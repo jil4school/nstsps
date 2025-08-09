@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createContext, useContext, useState } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 interface StudentInfo {
   user_id: string;
@@ -55,6 +56,7 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         setError(null);
       } else {
         setError(response.data.error || "Failed to fetch student info");
+        toast.error("Failed to fetch student info", response.data.error);
         setStudent(null);
       }
     } catch (err: any) {
@@ -63,7 +65,7 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         err.message ??
         "Student info request failed";
 
-      console.error("Axios error (student):", err);
+      toast.error("Axios error (student):", err);
       setError(message);
       setStudent(null);
     }
@@ -81,15 +83,16 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
       if (response.data && !response.data.error) {
         if (data.user_id) {
           await fetchStudentInfo(data.user_id);
+          toast.success("Updated Successfully");
         }
       } else {
-        console.error("Update error:", response.data.error);
         setError(response.data.error || "Failed to update student info");
+        toast.error("Update error:", response.data.error);
       }
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Student update failed";
-      console.error("Axios error (update):", err);
+      toast.error("Axios error (update):", err);
       setError(message);
     }
   };

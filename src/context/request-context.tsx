@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createContext, useContext, useState } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 interface RequestData {
   user_id: number;
@@ -47,7 +48,7 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (response.data?.error) {
-        console.error("Request submission error:", response.data.error);
+        toast.error("Request submission failed:", response.data.error);
         setError(response.data.error);
       } else {
         setError(null);
@@ -55,7 +56,7 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Request submission failed";
-      console.error("Axios error (request):", err);
+      toast.error("Axios error (request):", err);
       setError(message);
     } finally {
       setLoading(false);

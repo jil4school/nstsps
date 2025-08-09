@@ -692,7 +692,7 @@ function MasterFile() {
                 )}
               />
             </div>
-            <div className="flex justify-end mt-5 mr-30">
+            <div className="flex justify-end mt-5 mr-30 mb-5">
               <Button
                 type="submit"
                 className="bg-[#1BB2EF] text-white ml-15 w-20 "

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { School } from "lucide-react";
+import { toast } from "sonner";
 
 type Registration = {
   registration_id: string;
@@ -44,7 +44,7 @@ export const RegistrationProvider = ({
       );
 
       if (!Array.isArray(response.data)) {
-        console.error("Expected array, got:", response.data);
+        toast.error("No student data found", response.data);
         setError("No student data found.");
         setRegistrations([]);
         return;
@@ -63,7 +63,9 @@ export const RegistrationProvider = ({
 
       setRegistrations(formatted);
     } catch (err) {
-      console.error("API fetch error", err);
+      toast.error(
+        `API fetch error: ${err instanceof Error ? err.message : String(err)}`
+      );
       setError("Something went wrong while fetching.");
       setRegistrations([]);
     }
@@ -80,7 +82,7 @@ export const RegistrationProvider = ({
       const item = response.data;
 
       if (!item || item.error) {
-        console.warn("No registration found for ID:", registrationId);
+        toast.error(`No registration found for ID: ${registrationId}`);
         return null;
       }
 
@@ -96,7 +98,9 @@ export const RegistrationProvider = ({
         year_level: item.year_level,
       };
     } catch (err) {
-      console.error("Error fetching registration by ID", err);
+      toast.error(
+        `Error fetching registration by ID: ${err instanceof Error ? err.message : String(err)}`
+      );
       return null;
     }
   };
@@ -107,6 +111,7 @@ export const RegistrationProvider = ({
       fetchRegistrationData(userId);
     } else {
       setError("No user_id found in localStorage.");
+      toast.error("No user_id found in localStorage.");
     }
   }, []);
 

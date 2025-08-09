@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createContext, useContext, useState } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 interface User {
   user_id: number;
@@ -43,16 +44,19 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         setUser({ user_id: userId, email });
         localStorage.setItem("user_id", String(userId));
         setError(null);
+        toast.success("Login successful");
         return true;
+        
       }
 
       setError("Login failed: Invalid credentials");
+      toast.error("Login failed: Invalid credentials");
       return false;
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Login request failed";
 
-      console.error("Axios error:", err);
+      toast.error(message);
       setError(message);
       return false;
     }
