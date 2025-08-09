@@ -5,6 +5,8 @@ import MasterFile from "./master-file";
 import RegistrationDetails from "./registration-details";
 import RequestForm from "./request-form";
 import GradesDisplay from "./grades-display";
+import Accounting from "./accounting";
+import ChangePassword from "./change-password";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -27,8 +29,12 @@ const routes = [
     element: <RequestForm />,
   },
   {
-    path: "/nststs/utilities/change-password",
-    element: <StudentHome />,
+    path: "/nstsps/student-services/accounting",
+    element: <Accounting />,
+  },
+  {
+    path: "/nstsps/utilities/change-password",
+    element: <ChangePassword />,
   },
 ];
 

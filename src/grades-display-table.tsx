@@ -73,8 +73,6 @@ const gwa = () => {
   return gwa.toFixed(2);
 };
 
-
-
   return (
     <Table>
       <TableHeader className="bg-[#919090] text-white">

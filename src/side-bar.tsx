@@ -83,7 +83,7 @@ function SideBar() {
 
           <span className="my-class text-white text-2xl mt-10">Utilities</span>
           <div className="flex flex-col pl-10">
-            <Link to={menuItems[4].path}>
+            <Link to={menuItems[5].path}>
               <Button
                 variant="link"
                 className={`

@@ -24,6 +24,9 @@ import { Button } from "./components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import PendingRequestTable from "./pending-request-table";
 import ArchiveRequestTable from "./archive-request-table";
+import { useRequest } from "./context/request-context";
+import { useEffect } from "react";
+import { useMasterFile } from "@/context/master-file-context"; // hook to fetch student info
 
 const formSchema = z.object({
   user_id: z.number(),
@@ -34,14 +37,10 @@ const formSchema = z.object({
   mode_of_payment: z.string(),
   receipt: z.instanceof(File).optional(),
 });
-async function onSubmit(values: z.infer<typeof formSchema>) {
-  try {
-    console.log("Form submitted with values:", values);
-  } catch (error: any) {
-    console.error("Unexpected error:", error);
-  }
-}
+
 function RequestForm() {
+  const { student, fetchStudentInfo } = useMasterFile();
+  const { createRequest, error, loading } = useRequest();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -54,6 +53,33 @@ function RequestForm() {
       receipt: undefined,
     },
   });
+
+  // Set student data into the form once available
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("user_id");
+
+    if (storedUserId) {
+      const parsedUserId = parseInt(storedUserId, 10);
+      form.setValue("user_id", Number(parsedUserId));
+
+      form.setValue("user_id", parsedUserId);
+    }
+  }, []);
+
+  // Watch for `student` updates to inject student_id
+  useEffect(() => {
+    if (student?.student_id) {
+      form.setValue("student_id", Number(student.student_id));
+    }
+  }, []);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await createRequest(values);
+      console.log("Form submitted successfully");
+    } catch (error) {
+      console.error("Submit failed:", error);
+    }
+  }
   return (
     <>
       <div className="flex flex-row h-screen w-screen bg-white">
@@ -310,11 +336,12 @@ function RequestForm() {
 
                       <div className="flex justify-end mt-5">
                         <Button
-                          type="submit"
-                          className="bg-[#1BB2EF] text-white w-20"
-                        >
-                          Submit
-                        </Button>
+  type="submit"
+  disabled={form.watch("student_id") === 0 || loading}
+  className="bg-[#1BB2EF] text-white w-20"
+>
+  Submit
+</Button>
                       </div>
                     </div>
                   </form>
@@ -324,8 +351,12 @@ function RequestForm() {
             <div className="fixed top-50 right-5 w-[20%] h-120 bg-[#919090] rounded-md p-3">
               <Tabs defaultValue="request" className="w-full">
                 <TabsList className="w-full bg-[#afadad] text-white">
-                  <TabsTrigger value="Pending" className="w-[50%]">Pending</TabsTrigger>
-                  <TabsTrigger value="Archive" className="w-[50%]">Archive</TabsTrigger>
+                  <TabsTrigger value="Pending" className="w-[50%]">
+                    Pending
+                  </TabsTrigger>
+                  <TabsTrigger value="Archive" className="w-[50%]">
+                    Archive
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="Pending">
                   <PendingRequestTable />
