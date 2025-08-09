@@ -13,21 +13,30 @@ import {
 } from "./components/ui/form";
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
+import { useLogin } from "./context/login-context";
+
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\S]{8,}$/;
 
 const formSchema = z
   .object({
     user_id: z.number(),
     old_password: z.string(),
-    new_password: z.string(),
+    new_password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        passwordRegex,
+        "Password must contain at least one letter and one number"
+      ),
     confirm_password: z.string(),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords do not match",
-    path: ["confirm_password"], // Show error message under confirm_password field
+    path: ["confirm_password"],
   });
 
-
 function ChangePassword() {
+  const { changePassword, user } = useLogin();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,18 +59,28 @@ function ChangePassword() {
   }, []);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-  try {
+    if (!user) {
+      console.error("User not logged in");
+      return;
+    }
+
     if (values.new_password !== values.confirm_password) {
       console.error("Passwords do not match");
       return;
     }
 
-    // Proceed with password change request
-    console.log("Passwords match. Proceeding...");
-  } catch (error) {
-    console.error("An error occurred:", error);
+    const success = await changePassword(
+      values.user_id,
+      values.old_password,
+      values.new_password,
+      values.confirm_password
+    );
+
+    if (success) {
+      console.log("Password changed successfully");
+      // maybe reset the form here
+    }
   }
-}
 
   return (
     <>
@@ -95,7 +114,7 @@ function ChangePassword() {
                             type="password"
                             placeholder="Enter your old password"
                             {...field}
-                            disabled
+                            
                             className="w-110"
                             onChange={(e) => field.onChange(e.target.value)}
                           />
@@ -116,7 +135,7 @@ function ChangePassword() {
                           <Input
                             placeholder="Enter your new password"
                             {...field}
-                            disabled
+                            
                             className="w-110"
                             onChange={(e) => field.onChange(e.target.value)}
                           />
@@ -137,7 +156,7 @@ function ChangePassword() {
                           <Input
                             placeholder="Retype your new password"
                             {...field}
-                            disabled
+                            
                             className="w-110"
                             onChange={(e) => field.onChange(e.target.value)}
                           />

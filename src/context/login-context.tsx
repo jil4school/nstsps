@@ -11,6 +11,12 @@ interface LoginContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  changePassword: (
+    user_id: number,
+    old_password: string,
+    new_password: string,
+    confirm_password: string
+  ) => Promise<boolean>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
 }
@@ -55,14 +61,52 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
   };
+const changePassword = async (
+  user_id: number,
+  old_password: string,
+  new_password: string,
+  confirm_password: string
+): Promise<boolean> => {
+  try {
+    const response = await axios.post(
+      "http://localhost/NSTSPS_API/ChangePassword.php",
+      {
+        user_id,
+        old_password,
+        new_password,
+        confirm_password,
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    if (response.data && response.data.success) {
+      console.log(response.data.message); // "Password changed successfully"
+      return true;
+    }
+
+    setError(response.data.error || "Failed to change password");
+    return false;
+  } catch (err: any) {
+    const message =
+      err.response?.data?.error ??
+      err.message ??
+      "Password change request failed";
+
+    console.error("Axios error:", err);
+    setError(message);
+    return false;
+  }
+};
 
   const value: LoginContextType = {
-    user,
-    login,
-    logout,
-    error,
-    setError,
-  };
+  user,
+  login,
+  logout,
+  changePassword, // add here
+  error,
+  setError,
+};
+
 
   return (
     <LoginContext.Provider value={value}>{children}</LoginContext.Provider>
