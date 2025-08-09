@@ -10,6 +10,7 @@ import { RegistrationProvider } from "./context/registration-context.tsx";
 import { GradesProvider } from "./context/grades-context.tsx";
 import { RequestProvider } from "./context/request-context.tsx";
 import { Toaster } from "./components/ui/sonner.tsx";
+import { AccountingProvider } from "./context/accounting-context.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -20,8 +21,10 @@ createRoot(document.getElementById("root")!).render(
             <RegistrationProvider>
               <GradesProvider>
                 <RequestProvider>
-                  <Toaster />
-                  <App />
+                  <AccountingProvider>
+                    <Toaster />
+                    <App />
+                  </AccountingProvider>
                 </RequestProvider>
               </GradesProvider>
             </RegistrationProvider>

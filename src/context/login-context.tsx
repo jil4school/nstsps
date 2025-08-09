@@ -84,11 +84,12 @@ const changePassword = async (
     );
 
     if (response.data && response.data.success) {
-      console.log(response.data.message); // "Password changed successfully"
+      toast.success(response.data.message); // "Password changed successfully"
       return true;
     }
 
     setError(response.data.error || "Failed to change password");
+    toast.error(response.data.error);
     return false;
   } catch (err: any) {
     const message =
@@ -97,6 +98,7 @@ const changePassword = async (
       "Password change request failed";
 
     console.error("Axios error:", err);
+    toast.error(message);
     setError(message);
     return false;
   }
