@@ -105,7 +105,7 @@ const gwa = () => {
             {expandedRow === studentReg.registration_id && (
               <TableRow className="bg-white">
                 <TableCell colSpan={5}>
-                  <div className="h-fit w-full bg-red-200 p-2">
+                  <div className="h-fit w-full bg-white p-2">
                     <img src={logo} alt="Logo" className="w-40 h-10" />
                     <div className="flex justify-center">
                       <span className="FLEX text-lg font-semibold justify-self-center">
