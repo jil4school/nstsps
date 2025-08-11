@@ -12,6 +12,7 @@ function StudentHome() {
       fetchStudentInfo(userId);
     }
   }, []);
+  
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <SideBar />

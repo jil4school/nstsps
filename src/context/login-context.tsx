@@ -1,5 +1,5 @@
 import axios from "axios";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ interface LoginContextType {
   ) => Promise<boolean>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
+  setUser: Dispatch<SetStateAction<User | null>>;
 }
 
 const LoginContext = createContext<LoginContextType | undefined>(undefined);
@@ -46,7 +47,6 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         setError(null);
         toast.success("Login successful");
         return true;
-        
       }
 
       setError("Login failed: Invalid credentials");
@@ -62,57 +62,72 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Restore user from localStorage on page load
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("user_id");
+    const storedEmail = localStorage.getItem("user_email");
+    if (storedUserId && storedEmail) {
+      setUser({
+        user_id: parseInt(storedUserId, 10),
+        email: storedEmail,
+      });
+    }
+  }, []);
   const logout = () => {
     setUser(null);
   };
-const changePassword = async (
-  user_id: number,
-  old_password: string,
-  new_password: string,
-  confirm_password: string
-): Promise<boolean> => {
-  try {
-    const response = await axios.post(
-      "http://localhost/NSTSPS_API/ChangePassword.php",
-      {
-        user_id,
-        old_password,
-        new_password,
-        confirm_password,
-      },
-      { headers: { "Content-Type": "application/json" } }
-    );
 
-    if (response.data && response.data.success) {
-      toast.success(response.data.message); // "Password changed successfully"
-      return true;
+  const changePassword = async (
+    user_id: number,
+    old_password: string,
+    new_password: string,
+    confirm_password: string
+  ): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/ChangePassword.php",
+        {
+          user_id,
+          old_password,
+          new_password,
+          confirm_password,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data && response.data.success) {
+        toast.success(response.data.message);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        return true;
+      }
+
+      setError(response.data.error || "Failed to change password");
+      toast.error(response.data.error);
+      return false;
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Password change request failed";
+
+      console.error("Axios error:", err);
+      toast.error(message);
+      setError(message);
+      return false;
     }
-
-    setError(response.data.error || "Failed to change password");
-    toast.error(response.data.error);
-    return false;
-  } catch (err: any) {
-    const message =
-      err.response?.data?.error ??
-      err.message ??
-      "Password change request failed";
-
-    console.error("Axios error:", err);
-    toast.error(message);
-    setError(message);
-    return false;
-  }
-};
+  };
 
   const value: LoginContextType = {
-  user,
-  login,
-  logout,
-  changePassword, // add here
-  error,
-  setError,
-};
-
+    user,
+    login,
+    logout,
+    changePassword, // add here
+    error,
+    setError,
+    setUser,
+  };
 
   return (
     <LoginContext.Provider value={value}>{children}</LoginContext.Provider>

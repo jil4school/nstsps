@@ -2,6 +2,7 @@ import axios from "axios";
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
+import { useLogin } from "./login-context";
 
 interface Accounting {
   id: string;
@@ -20,6 +21,20 @@ interface AccountingContextType {
 const AccountingContext = createContext<AccountingContextType | undefined>(undefined);
 
 export const AccountingProvider = ({ children }: { children: ReactNode }) => {
+  const { user, setUser } = useLogin();
+   useEffect(() => {
+    const storedUserId = localStorage.getItem("user_id");
+    const storedEmail = localStorage.getItem("user_email");
+    if (storedUserId && storedEmail) {
+      setUser({
+        user_id: parseInt(storedUserId, 10),
+        email: storedEmail,
+      });
+    }
+  }, []);
+  const logout = () => {
+    setUser(null);
+  };
   const [accountingRecord, setAccountingRecord] = useState<Accounting | null>(null);
 
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +49,8 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
     // If backend returns an array, take the first one
     if (Array.isArray(response.data) && response.data.length > 0) {
       setAccountingRecord(response.data[0]);
+
+
     } else {
       setAccountingRecord(null);
       setError("No accounting record found.");

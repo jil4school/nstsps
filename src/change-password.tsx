@@ -1,9 +1,10 @@
 import z from "zod";
 import Header from "./header";
 import SideBar from "./side-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -36,6 +37,9 @@ const formSchema = z
   });
 
 function ChangePassword() {
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const { changePassword, user } = useLogin();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,11 +79,6 @@ function ChangePassword() {
       values.new_password,
       values.confirm_password
     );
-
-    if (success) {
-      console.log("Password changed successfully");
-      // maybe reset the form here
-    }
   }
 
   return (
@@ -102,7 +101,8 @@ function ChangePassword() {
                   boxShadow: "-4px 4px 4px rgba(0, 0, 0, 0.25)",
                 }}
               >
-                <div className="flex flex-row items-center">
+                {/* Old Password */}
+                <div className="flex flex-row items-center relative">
                   <span className="w-100">Old Password</span>
                   <FormField
                     control={form.control}
@@ -110,56 +110,92 @@ function ChangePassword() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Enter your old password"
-                            {...field}
-                            
-                            className="w-110"
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
+                          <div className="relative w-110">
+                            <Input
+                              type={showOld ? "text" : "password"}
+                              placeholder="Enter your old password"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-2 top-2 text-gray-500"
+                              onClick={() => setShowOld(!showOld)}
+                            >
+                              {showOld ? (
+                                <EyeOff size={16} />
+                              ) : (
+                                <Eye size={16} />
+                              )}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+
+                {/* New Password */}
                 <div className="flex flex-row mt-15 items-center">
-                  <span className=" w-100">New Password</span>
+                  <span className="w-100">New Password</span>
                   <FormField
                     control={form.control}
                     name="new_password"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input
-                            placeholder="Enter your new password"
-                            {...field}
-                            
-                            className="w-110"
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
+                          <div className="relative w-110">
+                            <Input
+                              type={showNew ? "text" : "password"}
+                              placeholder="Enter your new password"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-2 top-2 text-gray-500"
+                              onClick={() => setShowNew(!showNew)}
+                            >
+                              {showNew ? (
+                                <EyeOff size={16} />
+                              ) : (
+                                <Eye size={16} />
+                              )}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+
+                {/* Confirm Password */}
                 <div className="flex flex-row mt-15 items-center">
-                  <span className=" w-100">Confirm Password</span>
+                  <span className="w-100">Confirm Password</span>
                   <FormField
                     control={form.control}
                     name="confirm_password"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input
-                            placeholder="Retype your new password"
-                            {...field}
-                            
-                            className="w-110"
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
+                          <div className="relative w-110">
+                            <Input
+                              type={showConfirm ? "text" : "password"}
+                              placeholder="Retype your new password"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-2 top-2 text-gray-500"
+                              onClick={() => setShowConfirm(!showConfirm)}
+                            >
+                              {showConfirm ? (
+                                <EyeOff size={16} />
+                              ) : (
+                                <Eye size={16} />
+                              )}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

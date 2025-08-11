@@ -1,7 +1,7 @@
 import axios from "axios";
 import { createContext, useContext, useState } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 
 interface RequestData {
   user_id: number;
@@ -52,6 +52,10 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
         setError(response.data.error);
       } else {
         setError(null);
+        toast.success("Request successfully submitted");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }
     } catch (err: any) {
       const message =

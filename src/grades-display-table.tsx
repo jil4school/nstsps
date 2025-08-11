@@ -40,7 +40,12 @@ function GradesDisplayTable() {
       setSelectedRegistration(null);
     } else {
       setExpandedRow(registrationId);
-      const reg = await getRegistrationById(registrationId);
+      const userId = localStorage.getItem("user_id") || "";
+      const reg = await getRegistrationById(
+        registrationId,
+        String(student?.student_id),
+        userId
+      );
       setSelectedRegistration(reg);
 
       if (reg?.studentId && reg?.registration_id) {
@@ -49,29 +54,29 @@ function GradesDisplayTable() {
     }
   };
   const totalUnits = grades.reduce((sum, grade) => {
-  const unit = parseFloat(grade.unit);
-  return sum + (isNaN(unit) ? 0 : unit);
-}, 0);
+    const unit = parseFloat(grade.unit);
+    return sum + (isNaN(unit) ? 0 : unit);
+  }, 0);
 
-const gwa = () => {
-  if (grades.length === 0) return 0;
+  const gwa = () => {
+    if (grades.length === 0) return 0;
 
-  let totalWeightedGrades = 0;
-  let totalUnits = 0;
+    let totalWeightedGrades = 0;
+    let totalUnits = 0;
 
-  grades.forEach((subject) => {
-    const grade = parseFloat(subject.grade);
-    const units = parseFloat(subject.unit); 
+    grades.forEach((subject) => {
+      const grade = parseFloat(subject.grade);
+      const units = parseFloat(subject.unit);
 
-    if (!isNaN(grade) && !isNaN(units)) {
-      totalWeightedGrades += grade * units;
-      totalUnits += units;
-    }
-  });
+      if (!isNaN(grade) && !isNaN(units)) {
+        totalWeightedGrades += grade * units;
+        totalUnits += units;
+      }
+    });
 
-  const gwa = totalUnits === 0 ? 0 : totalWeightedGrades / totalUnits;
-  return gwa.toFixed(2);
-};
+    const gwa = totalUnits === 0 ? 0 : totalWeightedGrades / totalUnits;
+    return gwa.toFixed(2);
+  };
 
   return (
     <Table>
@@ -79,7 +84,7 @@ const gwa = () => {
         <TableRow>
           <TableHead>S/ID.</TableHead>
           <TableHead>STUDENT NAME</TableHead>
-          <TableHead>REG DATE</TableHead>
+          <TableHead>S.Y.</TableHead>
           <TableHead>SEMESTER</TableHead>
           <TableHead>PROGRAM</TableHead>
         </TableRow>
@@ -173,8 +178,8 @@ const gwa = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {grades.map((grade) => (
-                            <tr key={grade.grade_id}>
+                          {grades.map((grade, idx) => (
+                            <tr key={`${grade.grade_id ?? "grade"}-${idx}`}>
                               <td
                                 style={{
                                   border: "1px solid #000000",
@@ -196,7 +201,8 @@ const gwa = () => {
                                   border: "1px solid #000000",
                                   textAlign: "center",
                                 }}
-                              >{grade.unit || "N/A"}
+                              >
+                                {grade.unit || "N/A"}
                               </td>
                               <td
                                 style={{

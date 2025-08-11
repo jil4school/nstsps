@@ -1,7 +1,8 @@
 import axios from "axios";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
+import { useLogin } from "./login-context";
 
 interface StudentInfo {
   user_id: string;
@@ -44,7 +45,21 @@ const MasterFileContext = createContext<MasterFileContextType | undefined>(
 export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
   const [student, setStudent] = useState<StudentInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { setUser } = useLogin();
 
+  useEffect(() => {
+      const storedUserId = localStorage.getItem("user_id");
+      const storedEmail = localStorage.getItem("user_email");
+      if (storedUserId && storedEmail) {
+        setUser({
+          user_id: parseInt(storedUserId, 10),
+          email: storedEmail,
+        });
+      }
+    }, []);
+    const logout = () => {
+      setUser(null);
+    };
   const fetchStudentInfo = async (user_id: string): Promise<void> => {
     try {
       const response = await axios.get(
@@ -84,6 +99,9 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         if (data.user_id) {
           await fetchStudentInfo(data.user_id);
           toast.success("Updated Successfully");
+          setTimeout(() => {
+          window.location.reload();
+        }, 1500);
         }
       } else {
         setError(response.data.error || "Failed to update student info");
