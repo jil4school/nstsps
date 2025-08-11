@@ -12,6 +12,9 @@ type Registration = {
   program_name?: string;
   year_level?: string;
   school_year?: string;
+  course_code?: string;
+  course_description?: string;
+  
 };
 
 type RegistrationContextType = {
