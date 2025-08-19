@@ -53,7 +53,9 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setError(null);
         toast.success("Request successfully submitted");
-       
+       setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }
     } catch (err: any) {
       const message =

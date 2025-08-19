@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -12,11 +12,10 @@ import {
   type SortingState,
   useReactTable,
   type VisibilityState,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+} from "@tanstack/react-table";
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -25,8 +24,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -34,89 +33,80 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-]
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
-export type Payment = {
-  id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
-}
+import { useMasterFile } from "@/context/master-file-context";
+import { Link } from "react-router-dom";
 
-export const columns: ColumnDef<Payment>[] = [
+// 👇 Same StudentInfo interface
+export type StudentInfo = {
+  user_id: string;
+  master_file_id: string;
+  student_id: string;
+  program_id: string;
+  program_name: string;
+  surname: string;
+  first_name: string;
+  middle_name?: string;
+};
+
+export const columns: ColumnDef<StudentInfo>[] = [
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "student_id",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="justify-start"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Student ID <ArrowUpDown />
+      </Button>
+    ),
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <div className="text-left">{row.getValue("student_id")}</div>
     ),
   },
   {
-    accessorKey: "email",
-    header: ({ column }) => {
+    id: "full_name",
+    header: () => <div className="text-left">Name</div>,
+    cell: ({ row }) => {
+      const { surname, first_name, middle_name } = row.original;
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <ArrowUpDown />
-        </Button>
+        <div className="text-left">
+          {surname}, {first_name} {middle_name ?? ""}
+        </div>
       );
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    sortingFn: (a, b) => {
+      const aName = `${a.original.surname} ${a.original.first_name} ${
+        a.original.middle_name ?? ""
+      }`;
+      const bName = `${b.original.surname} ${b.original.first_name} ${
+        b.original.middle_name ?? ""
+      }`;
+      return aName.localeCompare(bName);
+    },
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"));
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
-    },
+    accessorKey: "program_name",
+    header: () => <div className="text-left">Program</div>,
+    cell: ({ row }) => (
+      <div className="text-left">{row.getValue("program_name")}</div>
+    ),
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original;
+      const student = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -128,13 +118,13 @@ export const columns: ColumnDef<Payment>[] = [
           <DropdownMenuContent align="end" className="bg-white">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(student.student_id)}
             >
-              Copy payment ID
+              Copy Student ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem>View Profile</DropdownMenuItem>
+            <DropdownMenuItem>Edit Details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -142,20 +132,40 @@ export const columns: ColumnDef<Payment>[] = [
   },
 ];
 
-export function DataTableDemo() {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+export function StudentTable() {
+  const { fetchAllStudents } = useMasterFile();
+  const [students, setStudents] = React.useState<StudentInfo[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  // 👇 dialog state
+  const [selectedStudent, setSelectedStudent] =
+    React.useState<StudentInfo | null>(null);
+
+  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
-  )
+  );
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+    React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
+
+  React.useEffect(() => {
+    const loadStudents = async () => {
+      setLoading(true);
+      const data = await fetchAllStudents();
+      if (data) setStudents(data);
+      setLoading(false);
+    };
+    loadStudents();
+  }, [fetchAllStudents]);
 
   const table = useReactTable({
-    data,
+    data: students,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -167,73 +177,72 @@ export function DataTableDemo() {
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
-  })
+  });
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 w-full">
+        {/* search input */}
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
+          placeholder="Search students..."
+          value={globalFilter ?? ""}
+          onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
+
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
+          <DropdownMenuTrigger asChild className="ml-auto">
+            <Button className="bg-blue-200">Add Student</Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
+          <DropdownMenuContent align="end" className="w-40 bg-white">
+            <Link to="/nstsps/admission/new-student-single">
+              <DropdownMenuItem>Single</DropdownMenuItem>
+            </Link>
+            <Link to="/nstsps/admission/new-student-batch">
+              <DropdownMenuItem>Batch</DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* table */}
       <div className="overflow-hidden rounded-md">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  )
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => setSelectedStudent(row.original)} // 👈 row click only
+                  className="cursor-pointer hover:bg-gray-100"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -258,11 +267,9 @@ export function DataTableDemo() {
           </TableBody>
         </Table>
       </div>
+
+      {/* pagination */}
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
         <div className="space-x-2">
           <Button
             variant="outline"
@@ -282,6 +289,89 @@ export function DataTableDemo() {
           </Button>
         </div>
       </div>
+
+      {/* dialog for student details */}
+      <Dialog
+        open={!!selectedStudent}
+        onOpenChange={() => setSelectedStudent(null)}
+      >
+        <DialogContent className="max-w-lg bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-center">Student Details</DialogTitle>
+          </DialogHeader>
+
+          {selectedStudent && (
+            <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
+              <p>
+                <strong>Student ID:</strong> {selectedStudent.student_id}
+              </p>
+              <p>
+                <strong>Surname:</strong> {selectedStudent.surname}
+              </p>
+              <p>
+                <strong>First Name:</strong> {selectedStudent.first_name}
+              </p>
+              <p>
+                <strong>Middle Name:</strong>{" "}
+                {selectedStudent.middle_name ?? "—"}
+              </p>
+              <p>
+                <strong>Gender:</strong> {selectedStudent.gender}
+              </p>
+              <p>
+                <strong>Nationality:</strong> {selectedStudent.nationality}
+              </p>
+              <p>
+                <strong>Civil Status:</strong> {selectedStudent.civil_status}
+              </p>
+              <p>
+                <strong>Religion:</strong> {selectedStudent.religion}
+              </p>
+              <p>
+                <strong>Birthday:</strong> {selectedStudent.birthday}
+              </p>
+              <p>
+                <strong>Birthplace:</strong> {selectedStudent.birthplace}
+              </p>
+              <p>
+                <strong>Street:</strong> {selectedStudent.street}
+              </p>
+              <p>
+                <strong>Barangay:</strong> {selectedStudent.barangay}
+              </p>
+              <p>
+                <strong>Region:</strong> {selectedStudent.region}
+              </p>
+              <p>
+                <strong>Municipality:</strong> {selectedStudent.municipality}
+              </p>
+              <p>
+                <strong>Mobile Number:</strong> {selectedStudent.mobile_number}
+              </p>
+              <p>
+                <strong>Guardian Surname:</strong>{" "}
+                {selectedStudent.guardian_surname}
+              </p>
+              <p>
+                <strong>Guardian First Name:</strong>{" "}
+                {selectedStudent.guardian_first_name}
+              </p>
+              <p>
+                <strong>Relation with Student:</strong>{" "}
+                {selectedStudent.relation_with_the_student}
+              </p>
+              <p>
+                <strong>Guardian Mobile Number:</strong>{" "}
+                {selectedStudent.guardian_mobile_number}
+              </p>
+              <p>
+                <strong>Guardian Email:</strong>{" "}
+                {selectedStudent.guardian_email}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }
