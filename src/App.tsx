@@ -8,6 +8,7 @@ import GradesDisplay from "./grades-display";
 import Accounting from "./accounting";
 import ChangePassword from "./change-password";
 import AdmissionHome from "./admission-admin";
+import NewStudentSingle from "./new-student-form-single";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -38,6 +39,7 @@ const routes = [
     element: <ChangePassword />,
   },
   { path: "/nstsps/admission-home", element: <AdmissionHome /> },
+  { path: "/nstsps/admission/new-student-single", element: <NewStudentSingle /> },
 ];
 
 function App() {

@@ -1,14 +1,16 @@
+
 import HeaderAdmin from "./header-admin";
-import { DataTableDemo } from "./table-for-admin";
+import { StudentTable } from "./table-for-admin";
 
 function AdmissionHome() {
- 
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <div className="flex flex-col w-full">
-       <HeaderAdmin />
-        
-        <div className="flex mt-20 p-10"><DataTableDemo /></div>
+        <HeaderAdmin />
+
+        <div className="flex pl-10 pr-10 mt-25">
+          <StudentTable />
+        </div>
       </div>
     </div>
   );

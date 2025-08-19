@@ -37,6 +37,8 @@ interface MasterFileContextType {
   updateStudentInfo: (data: Partial<StudentInfo>) => Promise<void>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
+  fetchAllStudents: () => Promise<StudentInfo[] | null>;
+   insertStudent: (data: StudentInfo) => Promise<boolean>; // 🔹 new
 }
 
 const MasterFileContext = createContext<MasterFileContextType | undefined>(
@@ -81,6 +83,30 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
       setStudent(null);
     }
   };
+  // 🔹 New function: Insert Student
+  const insertStudent = async (data: StudentInfo): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/MasterFileController.php?action=insert", 
+        data
+      );
+
+      if (response.data && !response.data.error) {
+        toast.success("Student inserted successfully!");
+        return true;
+      } else {
+        setError(response.data.error || "Failed to insert student");
+        toast.error("Insert failed");
+        return false;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Student insert failed";
+      setError(message);
+      toast.error(message);
+      return false;
+    }
+  };
 
   const updateStudentInfo = async (
     data: Partial<StudentInfo>
@@ -111,12 +137,36 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+   // 🔹 New function: Fetch all students
+  const fetchAllStudents = async (): Promise<StudentInfo[] | null> => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/MasterFileController.php"
+      );
+
+      if (response.data && !response.data.error) {
+        return response.data as StudentInfo[];
+      } else {
+        setError(response.data.error || "Failed to fetch all students");
+        return null;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Failed to fetch all students";
+      setError(message);
+      return null;
+    }
+  };
+
+
   const value: MasterFileContextType = {
     student,
     fetchStudentInfo,
     error,
     updateStudentInfo,
     setError,
+    fetchAllStudents,
+    insertStudent, 
   };
 
   return (
