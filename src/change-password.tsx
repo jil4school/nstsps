@@ -15,6 +15,7 @@ import {
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
 import { useLogin } from "./context/login-context";
+import { toast } from "sonner";
 
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\S]{8,}$/;
 
@@ -64,12 +65,12 @@ function ChangePassword() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
-      console.error("User not logged in");
+      toast.error("User not logged in");
       return;
     }
 
     if (values.new_password !== values.confirm_password) {
-      console.error("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 

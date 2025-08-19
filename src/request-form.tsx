@@ -27,10 +27,12 @@ import ArchiveRequestTable from "./archive-request-table";
 import { useRequest } from "./context/request-context";
 import { useEffect } from "react";
 import { useMasterFile } from "@/context/master-file-context"; // hook to fetch student info
+import { useLogin } from "./context/login-context";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   user_id: z.number(),
-  student_id: z.number(),
+  master_file_id: z.number(),
   request: z.string(),
   request_remarks: z.string(),
   request_purpose: z.string(),
@@ -39,13 +41,14 @@ const formSchema = z.object({
 });
 
 function RequestForm() {
+  const { user } = useLogin();
   const { student, fetchStudentInfo } = useMasterFile();
   const { createRequest, error, loading } = useRequest();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       user_id: 0,
-      student_id: 0,
+      master_file_id: 0,
       request: "",
       request_remarks: "",
       request_purpose: "",
@@ -54,22 +57,17 @@ function RequestForm() {
     },
   });
 
-  // Set student data into the form once available
+ useEffect(() => {
+  if (user?.user_id) {
+    form.setValue("user_id", user.user_id);
+    fetchStudentInfo(String(user.user_id)); // if you also need to fetch here
+  }
+}, [user]);
+
+ 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("user_id");
-
-    if (storedUserId) {
-      const parsedUserId = parseInt(storedUserId, 10);
-      form.setValue("user_id", Number(parsedUserId));
-
-      form.setValue("user_id", parsedUserId);
-    }
-  }, []);
-
-  // Watch for `student` updates to inject student_id
-  useEffect(() => {
-    if (student?.student_id) {
-      form.setValue("student_id", Number(student.student_id));
+    if (student?.master_file_id) {
+      form.setValue("master_file_id", Number(student.master_file_id));
     }
   }, []);
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -77,7 +75,7 @@ function RequestForm() {
       await createRequest(values);
       console.log("Form submitted successfully");
     } catch (error) {
-      console.error("Submit failed:", error);
+      toast.error("Submission failed");
     }
   }
   return (
@@ -337,7 +335,7 @@ function RequestForm() {
                       <div className="flex justify-end mt-5">
                         <Button
   type="submit"
-  disabled={form.watch("student_id") === 0 || loading}
+  disabled={form.watch("master_file_id") === 0 || loading}
   className="bg-[#1BB2EF] text-white w-20"
 >
   Submit

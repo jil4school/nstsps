@@ -5,7 +5,7 @@ import { toast, Toaster } from "sonner";
 
 interface RequestData {
   user_id: number;
-  student_id: number;
+  master_file_id: number;
   request: string;
   request_remarks: string;
   request_purpose: string;
@@ -48,19 +48,16 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (response.data?.error) {
-        toast.error("Request submission failed:", response.data.error);
+        toast.error("Request submission failed:");
         setError(response.data.error);
       } else {
         setError(null);
         toast.success("Request successfully submitted");
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+       
       }
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Request submission failed";
-      toast.error("Axios error (request):", err);
       setError(message);
     } finally {
       setLoading(false);

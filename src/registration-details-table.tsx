@@ -10,10 +10,12 @@ import { useRegistrationContext } from "@/context/registration-context";
 import React, { useEffect, useState } from "react";
 import logo from "./assets/logoo.png";
 import { useMasterFile } from "./context/master-file-context";
+import { useLogin } from "./context/login-context";
 
 // paste your getRegistrationById function here if it's not imported
 
 function RegistrationDetailsTable() {
+  const { user } = useLogin();
   const { registrations, loading, error, getRegistrationById } =
     useRegistrationContext();
   const { student, fetchStudentInfo } = useMasterFile();
@@ -29,17 +31,17 @@ function RegistrationDetailsTable() {
   if (error) return <p className="text-red-500">{error}</p>;
 
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (userId) {
-      fetchStudentInfo(userId);
+    if (user?.user_id) {
+      fetchStudentInfo(String(user.user_id));
+      
     }
-  }, []);
+  }, [user]);
 
   const toggleRow = async (
     index: number,
-    registrationId: string,
-    studentId: string,
-    userId: string
+    registration_id: string,
+    master_file_id: string,
+    user_id: string
   ) => {
     if (expandedRow === index) {
       setExpandedRow(null);
@@ -49,9 +51,9 @@ function RegistrationDetailsTable() {
     // Fetch course data only if not already loaded
     if (!courseData[index]) {
       const regDetails = await getRegistrationById(
-        registrationId,
-        studentId,
-        userId
+        registration_id,
+        master_file_id,
+        user_id
       );
       if (regDetails) {
         setCourseData((prev) => ({
@@ -85,16 +87,16 @@ function RegistrationDetailsTable() {
       <TableBody>
         {registrations.map((studentt, index) => (
             <React.Fragment
-              key={`${studentt.registration_id}-${studentt.userId}-${studentt.studentId}`}
+              key={`${studentt.registration_id}-${studentt.user_id}-${studentt.master_file_id}`}
             >
               <TableRow
-                key={studentt.studentId}
+                key={studentt.master_file_id}
                 onClick={() =>
                   toggleRow(
                     index,
                     studentt.registration_id,
-                    studentt.studentId,
-                    studentt.userId
+                    studentt.master_file_id,
+                    studentt.user_id
                   )
                 }
                 className={`${
@@ -102,7 +104,7 @@ function RegistrationDetailsTable() {
                 } cursor-pointer`}
               >
                 <TableCell className="font-medium">
-                  {studentt.studentId}
+                  {studentt.student_id}
                 </TableCell>
                 <TableCell>{studentt.studentName}</TableCell>
                 <TableCell>{studentt.registration_date}</TableCell>

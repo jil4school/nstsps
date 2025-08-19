@@ -1,18 +1,18 @@
 import Header from "./header";
 import SideBar from "./side-bar";
 import { useAccounting } from "./context/accounting-context";
-import { useMasterFile } from "./context/master-file-context";
 import { useEffect } from "react";
+import { useLogin } from "./context/login-context";
 
 function Accounting() {
   const { accountingRecord, fetchAccounting } = useAccounting();
-
+  const { user } = useLogin();
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (userId) {
-      fetchAccounting(userId);
+    if (user?.user_id) {
+      fetchAccounting(user?.user_id);
     }
-  }, []);
+  }, [user]);
+
   const balance = accountingRecord ? Number(accountingRecord.balance) : 0;
 
   const formattedBalance = balance.toLocaleString("en-PH", {
@@ -21,7 +21,7 @@ function Accounting() {
   });
 
   const statusLabel = balance === 0 ? "Fully Paid" : "Remaining Balance";
-  const statusColor = balance === 0 ? "#3BF157" : "#FF0000"; // green if 0, red if not
+  const statusColor = balance === 0 ? "#3BF157" : "#FF0000";
 
   return (
     <>

@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import { useMasterFile } from "./master-file-context";
 
 type Registration = {
-  userId: string;
+  user_id: string;
   registration_id: string;
-  studentId: string;
+  master_file_id: string;
+  student_id: string;
   studentName: string;
   registration_date: string;
   sem: string;
@@ -25,7 +26,7 @@ type RegistrationContextType = {
   registrations: Registration[];
   loading: boolean;
   error: string | null;
-  getRegistrationById: (registrationId: string, userId: string, studentId: string) => Promise<Registration | null>;
+  getRegistrationById: (registrationId: string, userId: string, masterFileId: string) => Promise<Registration | null>;
 };
 
 const RegistrationContext = createContext<RegistrationContextType>({
@@ -59,8 +60,9 @@ export const RegistrationProvider = ({
       }
 
       const formatted = response.data.map((item: any) => ({
-        userId: item.user_id,
-        studentId: item.student_id,
+        user_id: item.user_id,
+        master_file_id: item.master_file_id,
+        student_id: item.student_id,
         studentName: `${item.first_name} ${item.middle_name} ${item.last_name}`,
         registration_date: item.registration_date,
         sem: item.sem,
@@ -72,26 +74,24 @@ export const RegistrationProvider = ({
 
       setRegistrations(formatted);
     } catch (err) {
-      toast.error(
-        `API fetch error: ${err instanceof Error ? err.message : String(err)}`
-      );
+     
       setError("Something went wrong while fetching.");
       setRegistrations([]);
     }
   };
 const getRegistrationById = async (
-  registrationId: string,
-  studentId: string, // now expecting student_id
-  userId: string
+  registration_id: string,
+  master_file_id: string,
+  user_id: string
 ): Promise<Registration | null> => {
   try {
     const response = await axios.get(
     `http://localhost/NSTSPS_API/controller/RegistrationController.php`,
     {
       params: {
-        registration_id: registrationId,
-        student_id: studentId,
-        user_id: userId
+        registration_id: registration_id,
+        master_file_id: master_file_id,
+        user_id: user_id
       }
       }
     );
@@ -99,13 +99,14 @@ const getRegistrationById = async (
     const item = response.data;
 
     if (!item || item.error) {
-      toast.error(`No registration found for ID: ${registrationId}`);
+      toast.error(`No registration found for ID: ${registration_id}`);
       return null;
     }
 
     return {
-      userId: item.user_id,
-      studentId: item.student_id,
+      user_id: item.user_id,
+      master_file_id: item.master_file_id,
+      student_id: item.student_id,
       studentName: `${item.first_name} ${item.middle_name} ${item.last_name}`,
       registration_date: item.registration_date,
       sem: item.sem,

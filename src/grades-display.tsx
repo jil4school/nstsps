@@ -1,19 +1,19 @@
 import GradesDisplayTable from "./grades-display-table";
 import Header from "./header";
 import SideBar from "./side-bar";
-import logo from "./assets/logoo.png";
 import { useMasterFile } from "./context/master-file-context";
 import { useEffect } from "react";
+import { useLogin } from "./context/login-context";
 
 function GradesDisplay() {
-  const { student, fetchStudentInfo } = useMasterFile();
+  const { fetchStudentInfo } = useMasterFile();
+  const { user } = useLogin();
 
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (userId) {
-      fetchStudentInfo(userId);
-    }
-  }, []);
+  if (user?.user_id) {
+    fetchStudentInfo(String(user.user_id));
+  }
+}, [user]);
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
 

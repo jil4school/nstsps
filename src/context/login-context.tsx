@@ -6,6 +6,7 @@ import { toast } from "sonner";
 interface User {
   user_id: number;
   email: string;
+  role: string;
 }
 
 interface LoginContextType {
@@ -29,47 +30,46 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const response = await axios.post(
-        "http://localhost/NSTSPS_API/Login.php",
-        { email, password },
-        { headers: { "Content-Type": "application/json" } }
-      );
+const login = async (email: string, password: string): Promise<boolean> => {
+  try {
+    const response = await axios.post(
+      "http://localhost/NSTSPS_API/Login.php",
+      { email, password },
+      { headers: { "Content-Type": "application/json" } }
+    );
 
-      if (
-        response.data &&
-        (response.data.success === true || response.data.success === "true")
-      ) {
-        const userId = response.data.user_id;
-        setUser({ user_id: userId, email });
-        localStorage.setItem("user_id", String(userId));
-        setError(null);
-        toast.success("Login successful");
-        return true;
-      }
+    if (response.data && (response.data.success === true || response.data.success === "true")) {
+      const userId = response.data.user_id;
+      const role = response.data.role;
 
-      setError("Login failed: Invalid credentials");
-      toast.error("Login failed: Invalid credentials");
-      return false;
-    } catch (err: any) {
-      const message =
-        err.response?.data?.error ?? err.message ?? "Login request failed";
+      setUser({ user_id: userId, email, role });
+      localStorage.setItem("user_id", String(userId));
+      localStorage.setItem("role", role);
 
-      toast.error(message);
-      setError(message);
-      return false;
+      setError(null);
+      toast.success("Login successful");
+      return true;
     }
-  };
 
-  // Restore user from localStorage on page load
+    setError("Login failed: Invalid credentials");
+    toast.error("Login failed: Invalid credentials");
+    return false;
+  } catch (err: any) {
+    const message = err.response?.data?.error ?? err.message ?? "Login request failed";
+    setError(message);
+    return false;
+  }
+};
+
   useEffect(() => {
     const storedUserId = localStorage.getItem("user_id");
     const storedEmail = localStorage.getItem("user_email");
-    if (storedUserId && storedEmail) {
+    const storedRole = localStorage.getItem("role");
+    if (storedUserId && storedEmail && storedRole) {
       setUser({
         user_id: parseInt(storedUserId, 10),
         email: storedEmail,
+        role: storedRole,
       });
     }
   }, []);
@@ -104,16 +104,12 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setError(response.data.error || "Failed to change password");
-      toast.error(response.data.error);
       return false;
     } catch (err: any) {
       const message =
         err.response?.data?.error ??
         err.message ??
         "Password change request failed";
-
-      console.error("Axios error:", err);
-      toast.error(message);
       setError(message);
       return false;
     }

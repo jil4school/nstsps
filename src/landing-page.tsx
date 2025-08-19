@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLogin } from "./context/login-context";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 
 const formSchema = z.object({
@@ -27,14 +28,19 @@ function LandingPage() {
   });
   const navigate = useNavigate();
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-
+ async function onSubmit(values: z.infer<typeof formSchema>) {
   const success = await login(values.email, values.password);
 
   if (success) {
-    navigate("/nstsps/student-home");
+    const role = localStorage.getItem("role");
+
+    if (role) {
+      navigate(`/nstsps/${role}-home`);
+    } else {
+      toast.error("Role not found for user");
+    }
   } else {
-    console.error("❌ Login failed");
+    toast.error("❌ Login failed");
   }
 }
 

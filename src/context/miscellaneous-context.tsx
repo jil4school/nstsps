@@ -39,7 +39,6 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
       const message =
         err.response?.data?.error ?? err.message ?? "Program request failed";
 
-      toast.error("Axios error (program):", err);
       setError(message);
       setPrograms([]);
     }

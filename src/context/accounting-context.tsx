@@ -1,7 +1,6 @@
 import axios from "axios";
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode, Dispatch, SetStateAction } from "react";
-import { toast } from "sonner";
 import { useLogin } from "./login-context";
 
 interface Accounting {
@@ -12,7 +11,7 @@ interface Accounting {
   sem: string;
 }
 interface AccountingContextType {
-  accountingRecord: Accounting | null; // single record or null
+  accountingRecord: Accounting | null;
   fetchAccounting: (user_id: string | number) => Promise<void>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
@@ -22,16 +21,7 @@ const AccountingContext = createContext<AccountingContextType | undefined>(undef
 
 export const AccountingProvider = ({ children }: { children: ReactNode }) => {
   const { user, setUser } = useLogin();
-   useEffect(() => {
-    const storedUserId = localStorage.getItem("user_id");
-    const storedEmail = localStorage.getItem("user_email");
-    if (storedUserId && storedEmail) {
-      setUser({
-        user_id: parseInt(storedUserId, 10),
-        email: storedEmail,
-      });
-    }
-  }, []);
+  
   const logout = () => {
     setUser(null);
   };
@@ -46,30 +36,26 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
       { params: { user_id } }
     );
 
-    // If backend returns an array, take the first one
     if (Array.isArray(response.data) && response.data.length > 0) {
       setAccountingRecord(response.data[0]);
-
-
     } else {
       setAccountingRecord(null);
       setError("No accounting record found.");
-      toast.error("No accounting record found.");
+      
     }
   } catch (err: any) {
     const message = err.response?.data?.error ?? err.message ?? "Accounting request failed";
-    toast.error(message);
     setError(message);
     setAccountingRecord(null);
   }
 };
 
-  useEffect(() => {
-    const storedUserId = localStorage.getItem("user_id");
-    if (storedUserId) {
-      fetchAccounting(storedUserId);
-    }
-  }, []);
+ useEffect(() => {
+  if (user?.user_id) {
+    fetchAccounting(user?.user_id);
+  }
+}, [user]);
+
 
   const value: AccountingContextType = {
     accountingRecord,

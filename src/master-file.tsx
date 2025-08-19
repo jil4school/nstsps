@@ -31,6 +31,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMasterFile } from "./context/master-file-context";
 import { useState, useEffect } from "react";
 import { useProgram } from "@/context/miscellaneous-context";
+import { useLogin } from "./context/login-context";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   student_id: z.number(),
@@ -65,6 +67,7 @@ function isValidDate(date: Date | undefined) {
 }
 
 function MasterFile() {
+  const { user } = useLogin();
   const { programs } = useProgram();
   const { student, fetchStudentInfo, updateStudentInfo } = useMasterFile();
   const onSubmit = async (values: any) => {
@@ -79,18 +82,18 @@ function MasterFile() {
         guardian_first_name: firstName,
         student_id: student?.student_id,
         user_id: student?.user_id,
+        master_file_id: student?.master_file_id
       });
     } catch (error: any) {
-      console.error("Update failed:", error);
+      toast.error("Update failed:", error);
     }
   };
 
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (userId) {
-      fetchStudentInfo(userId);
-    }
-  }, []);
+  if (user?.user_id) {
+    fetchStudentInfo(String(user.user_id));
+  }
+}, [user]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

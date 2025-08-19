@@ -6,6 +6,7 @@ import { useLogin } from "./login-context";
 
 interface StudentInfo {
   user_id: string;
+  master_file_id: string;
   student_id: string;
   program_id: string;
   program_name: string;
@@ -45,18 +46,14 @@ const MasterFileContext = createContext<MasterFileContextType | undefined>(
 export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
   const [student, setStudent] = useState<StudentInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { setUser } = useLogin();
+  const { user, setUser } = useLogin();
 
   useEffect(() => {
-      const storedUserId = localStorage.getItem("user_id");
-      const storedEmail = localStorage.getItem("user_email");
-      if (storedUserId && storedEmail) {
-        setUser({
-          user_id: parseInt(storedUserId, 10),
-          email: storedEmail,
-        });
-      }
-    }, []);
+  if (user?.user_id) {
+    fetchStudentInfo(user.user_id.toString());
+  }
+}, [user]);
+
     const logout = () => {
       setUser(null);
     };
@@ -71,7 +68,6 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         setError(null);
       } else {
         setError(response.data.error || "Failed to fetch student info");
-        toast.error("Failed to fetch student info", response.data.error);
         setStudent(null);
       }
     } catch (err: any) {
@@ -80,7 +76,7 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         err.message ??
         "Student info request failed";
 
-      toast.error("Axios error (student):", err);
+
       setError(message);
       setStudent(null);
     }
@@ -105,12 +101,12 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         setError(response.data.error || "Failed to update student info");
-        toast.error("Update error:", response.data.error);
+        toast.error("Update error:");
       }
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Student update failed";
-      toast.error("Axios error (update):", err);
+     
       setError(message);
     }
   };

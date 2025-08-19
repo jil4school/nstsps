@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 type Grade = {
   grade_id: string;
-  student_id: string;
+  master_file_id: string;
   registration_id: string;
   course_id: string;
   course_description: string;
@@ -17,7 +17,7 @@ type GradesContextType = {
   grades: Grade[];
   loading: boolean;
   error: string | null;
-  fetchGrades: (studentId: string, registrationId: string) => Promise<void>;
+  fetchGrades: (masterFileId: string, registrationId: string) => Promise<void>;
 };
 
 const GradesContext = createContext<GradesContextType>({
@@ -32,17 +32,17 @@ export const GradesProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGrades = async (studentId: string, registrationId: string) => {
+  const fetchGrades = async (masterFileId: string, registrationId: string) => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await axios.get(
-        `http://localhost/NSTSPS_API/controller/GradesController.php?student_id=${studentId}&registration_id=${registrationId}`
+        `http://localhost/NSTSPS_API/controller/GradesController.php?master_file_id=${masterFileId}&registration_id=${registrationId}`
       );
 
       if (!Array.isArray(response.data)) {
-        toast.error("No grade records found:", response.data);
+        
         setGrades([]);
         setError("No grade records found.");
         return;
@@ -50,7 +50,7 @@ export const GradesProvider = ({ children }: { children: React.ReactNode }) => {
 
       const formattedGrades = response.data.map((item: any) => ({
         grade_id: item.grade_id,
-        student_id: item.student_id,
+        master_file_id: item.master_file_id,
         registration_id: item.registration_id,
         course_id: item.course_id,
         course_description: item.course_description,
@@ -61,9 +61,7 @@ export const GradesProvider = ({ children }: { children: React.ReactNode }) => {
 
       setGrades(formattedGrades);
     } catch (err) {
-      toast.error(
-        `Error fetching grades: ${err instanceof Error ? err.message : String(err)}`
-      );
+      
       setGrades([]);
       setError("Failed to fetch grades.");
     } finally {

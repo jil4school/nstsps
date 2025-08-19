@@ -2,17 +2,17 @@ import { useEffect } from "react";
 import SideBar from "./side-bar";
 import { useMasterFile } from "@/context/master-file-context"; 
 import Header from "./header";
+import { useLogin } from "./context/login-context";
 
 function StudentHome() {
  const { student, fetchStudentInfo } = useMasterFile();
+ const { user } = useLogin();
 
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (userId) {
-      fetchStudentInfo(userId);
+    if (user?.user_id) {
+      fetchStudentInfo(String(user.user_id));
     }
-  }, []);
-  
+  }, [user]);
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <SideBar />

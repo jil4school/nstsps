@@ -11,8 +11,10 @@ import { useRegistrationContext } from "@/context/registration-context";
 import logo from "./assets/logoo.png";
 import { useMasterFile } from "./context/master-file-context";
 import { useGradesContext } from "@/context/grades-context";
+import { useLogin } from "./context/login-context";
 
 function GradesDisplayTable() {
+  const { user } = useLogin();
   const [selectedRegistration, setSelectedRegistration] = useState<any | null>(
     null
   );
@@ -24,12 +26,11 @@ function GradesDisplayTable() {
 
   const { student, fetchStudentInfo } = useMasterFile();
 
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (userId) {
-      fetchStudentInfo(userId);
-    }
-  }, []);
+useEffect(() => {
+  if (user?.user_id) {
+    fetchStudentInfo(String(user?.user_id));
+  }
+}, [user]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
@@ -43,13 +44,13 @@ function GradesDisplayTable() {
       const userId = localStorage.getItem("user_id") || "";
       const reg = await getRegistrationById(
         registrationId,
-        String(student?.student_id),
+        String(student?.master_file_id),
         userId
       );
       setSelectedRegistration(reg);
 
-      if (reg?.studentId && reg?.registration_id) {
-        await fetchGrades(reg.studentId, reg.registration_id);
+      if (reg?.master_file_id && reg?.registration_id) {
+        await fetchGrades(reg.master_file_id, reg.registration_id);
       }
     }
   };
@@ -99,7 +100,7 @@ function GradesDisplayTable() {
               } hover:bg-gray-200`}
             >
               <TableCell className="font-medium">
-                {studentReg.studentId}
+                {studentReg.student_id}
               </TableCell>
               <TableCell>{studentReg.studentName}</TableCell>
               <TableCell>{studentReg.registration_date}</TableCell>
