@@ -14,14 +14,14 @@ const downloadTemplate = () => {
   document.body.removeChild(link);
 };
 
-export default function NewStudentBatch() {
-  // Map Excel column headers -> DB field names
+export default function EmailBatch() {
+
   const headerMapping: Record<string, string> = {
     "Student ID": "student_id",
     Surname: "surname",
     "First Name": "first_name",
     "Middle Name": "middle_name",
-    Program: "program_id", // ⚡ handled separately
+    Program: "program_id", 
     Gender: "gender",
     Nationality: "nationality",
     "Civil Status": "civil_status",

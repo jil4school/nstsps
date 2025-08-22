@@ -28,6 +28,7 @@ interface StudentInfo {
   guardian_first_name?: string;
   relation_with_the_student?: string;
   guardian_mobile_number?: string;
+  email:string;
   guardian_email?: string;
 }
 
