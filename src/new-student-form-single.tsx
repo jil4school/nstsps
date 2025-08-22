@@ -33,7 +33,6 @@ import { toast } from "sonner";
 import HeaderAdmin from "./header-admin";
 
 const formSchema = z.object({
-  user_id: z.number(),
   student_id: z.string(),
   program_id: z.string(),
   surname: z.string(),
@@ -67,7 +66,7 @@ function isValidDate(date: Date | undefined) {
 
 function NewStudentSingle() {
   const { programs } = useProgram();
-  const { insertStudent } = useMasterFile(); 
+  const { insertStudent } = useMasterFile();
   const onSubmit = async (values: any) => {
     const [surname = "", firstName = ""] = (values.guardian_name || "")
       .split(",")
@@ -646,14 +645,14 @@ function NewStudentSingle() {
                 )}
               />
             </div>
-              <div className="flex justify-end mt-5 mr-8 mb-5">
-    <Button
-      type="submit"
-      className="bg-[#1BB2EF] text-white ml-4 w-20"
-    >
-      Save
-    </Button>
-  </div>
+            <div className="flex justify-end mt-5 mr-8 mb-5">
+              <Button
+                type="submit"
+                className="bg-[#1BB2EF] text-white ml-4 w-fit"
+              >
+                Add Student
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

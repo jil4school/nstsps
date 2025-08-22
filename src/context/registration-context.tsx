@@ -138,7 +138,7 @@ const getRegistrationById = async (
       
     } else {
       setError("No user_id found in localStorage.");
-      toast.error("No user_id found in localStorage.");
+     
     }
   }, []);
 

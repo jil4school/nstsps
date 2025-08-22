@@ -38,7 +38,8 @@ interface MasterFileContextType {
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
   fetchAllStudents: () => Promise<StudentInfo[] | null>;
-   insertStudent: (data: StudentInfo) => Promise<boolean>; // 🔹 new
+  insertStudent: (data: StudentInfo) => Promise<boolean>; // 🔹 new
+  insertMultipleStudents: (data: StudentInfo[]) => Promise<boolean>; // 🔹 added here
 }
 
 const MasterFileContext = createContext<MasterFileContextType | undefined>(
@@ -51,14 +52,14 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
   const { user, setUser } = useLogin();
 
   useEffect(() => {
-  if (user?.user_id) {
-    fetchStudentInfo(user.user_id.toString());
-  }
-}, [user]);
+    if (user?.user_id) {
+      fetchStudentInfo(user.user_id.toString());
+    }
+  }, [user]);
 
-    const logout = () => {
-      setUser(null);
-    };
+  const logout = () => {
+    setUser(null);
+  };
   const fetchStudentInfo = async (user_id: string): Promise<void> => {
     try {
       const response = await axios.get(
@@ -78,7 +79,6 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         err.message ??
         "Student info request failed";
 
-
       setError(message);
       setStudent(null);
     }
@@ -87,7 +87,7 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
   const insertStudent = async (data: StudentInfo): Promise<boolean> => {
     try {
       const response = await axios.post(
-        "http://localhost/NSTSPS_API/controller/MasterFileController.php?action=insert", 
+        "http://localhost/NSTSPS_API/controller/MasterFileController.php",
         data
       );
 
@@ -122,8 +122,8 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
           await fetchStudentInfo(data.user_id);
           toast.success("Updated Successfully");
           setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+            window.location.reload();
+          }, 1500);
         }
       } else {
         setError(response.data.error || "Failed to update student info");
@@ -132,12 +132,12 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Student update failed";
-     
+
       setError(message);
     }
   };
 
-   // 🔹 New function: Fetch all students
+  // 🔹 New function: Fetch all students
   const fetchAllStudents = async (): Promise<StudentInfo[] | null> => {
     try {
       const response = await axios.get(
@@ -152,12 +152,41 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (err: any) {
       const message =
-        err.response?.data?.error ?? err.message ?? "Failed to fetch all students";
+        err.response?.data?.error ??
+        err.message ??
+        "Failed to fetch all students";
       setError(message);
       return null;
     }
   };
 
+  const insertMultipleStudents = async (
+    data: StudentInfo[]
+  ): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/MasterFileController.php",
+        { students: data } // PHP is already checking for this
+      );
+
+      if (response.data && !response.data.error) {
+        toast.success("Students inserted successfully!");
+        return true;
+      } else {
+        setError(response.data.error || "Failed to insert students");
+        toast.error("Batch insert failed");
+        return false;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Batch student insert failed";
+      setError(message);
+      toast.error(message);
+      return false;
+    }
+  };
 
   const value: MasterFileContextType = {
     student,
@@ -166,7 +195,8 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     updateStudentInfo,
     setError,
     fetchAllStudents,
-    insertStudent, 
+    insertStudent,
+    insertMultipleStudents,
   };
 
   return (

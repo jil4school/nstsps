@@ -194,7 +194,7 @@ export function StudentTable() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="ml-auto">
-            <Button className="bg-blue-200">Add Student</Button>
+            <Button className="bg-[#00ACED] text-white">Add Student</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 bg-white">
             <Link to="/nstsps/admission/new-student-single">
