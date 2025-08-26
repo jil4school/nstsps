@@ -13,12 +13,11 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -35,18 +34,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-
 import { useMasterFile } from "@/context/master-file-context";
 import { Link } from "react-router-dom";
+import * as XLSX from "xlsx";
 
-// 👇 Same StudentInfo interface
 export type StudentInfo = {
   user_id: string;
   master_file_id: string;
@@ -56,6 +47,30 @@ export type StudentInfo = {
   surname: string;
   first_name: string;
   middle_name?: string;
+};
+
+const downloadPendingEmailsExcel = (pendingStudents: StudentInfo[]) => {
+  if (!pendingStudents || pendingStudents.length === 0) {
+    alert("No pending emails to download");
+    return;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(
+    pendingStudents.map((s) => ({
+      "Student ID": s.student_id,
+      "Last Name": s.surname,
+      "First Name": s.first_name,
+      "Middle Name": s.middle_name ?? "",
+      Program: s.program_name,
+      Email: "",
+      Password: "",
+    }))
+  );
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Pending Emails");
+
+  XLSX.writeFile(wb, "PendingEmails.xlsx");
 };
 
 export const columns: ColumnDef<StudentInfo>[] = [
@@ -121,37 +136,29 @@ export const columns: ColumnDef<StudentInfo>[] = [
     },
   },
 ];
+type TableProps = {
+  data: StudentInfo[];
+  loading: boolean;
+  globalFilter: string;
+  setGlobalFilter: (val: string) => void;
+};
 
-export function StudentTableIT() {
-  const { fetchAllStudents } = useMasterFile();
-  const [students, setStudents] = React.useState<StudentInfo[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  // 👇 dialog state
-  const [selectedStudent, setSelectedStudent] =
-    React.useState<StudentInfo | null>(null);
-
+export function StudentTableContent({
+  data,
+  loading,
+  globalFilter,
+  setGlobalFilter,
+}: TableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-  const [globalFilter, setGlobalFilter] = React.useState("");
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  React.useEffect(() => {
-    const loadStudents = async () => {
-      setLoading(true);
-      const data = await fetchAllStudents();
-      if (data) setStudents(data);
-      setLoading(false);
-    };
-    loadStudents();
-  }, [fetchAllStudents]);
-
   const table = useReactTable({
-    data: students,
+    data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -169,27 +176,41 @@ export function StudentTableIT() {
       rowSelection,
       globalFilter,
     },
+    globalFilterFn: (row, columnId, filterValue) => {
+      const student = row.original;
+
+      const haystackParts = [
+        student.student_id,
+        student.surname,
+        student.first_name,
+        student.middle_name ?? "",
+        student.program_name,
+        (row.getValue("email") as string) ?? "",
+      ];
+
+      const nameParts1 = [
+        student.surname,
+        student.first_name,
+        student.middle_name,
+      ].filter(Boolean);
+      const fullName1 = `${student.surname}, ${[
+        student.first_name,
+        student.middle_name,
+      ]
+        .filter(Boolean)
+        .join(" ")}`;
+      const fullName2 = nameParts1.join(" ");
+
+      const haystack = [...haystackParts, fullName1, fullName2]
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+
+      return haystack.includes(filterValue.toLowerCase().trim());
+    },
   });
-
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4 w-full">
-        {/* search input */}
-        <Input
-          placeholder="Search students..."
-          value={globalFilter ?? ""}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-sm"
-        />
-
-        <div className="ml-auto">
-          <Link to="/nstsps/admission/email-batch">
-            <Button className="bg-[#00ACED] text-white">Add Student</Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* table */}
+    <>
       <div className="overflow-hidden rounded-md">
         <Table>
           <TableHeader>
@@ -218,14 +239,9 @@ export function StudentTableIT() {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : table.getRowModel().rows?.length ? (
+            ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  // removed onClick + cursor-pointer
-                  className="hover:bg-gray-50" // keep hover styling if you still want
-                >
+                <TableRow key={row.id} className="hover:bg-gray-50">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -271,6 +287,121 @@ export function StudentTableIT() {
           </Button>
         </div>
       </div>
+    </>
+  );
+}
+
+export function StudentTableIT() {
+  const { fetchAllStudents, fetchPendingEmails, fetchCreatedEmails } =
+    useMasterFile();
+
+  const [allStudents, setAllStudents] = React.useState<StudentInfo[]>([]);
+  const [pendingStudents, setPendingStudents] = React.useState<StudentInfo[]>(
+    []
+  );
+  const [createdStudents, setCreatedStudents] = React.useState<StudentInfo[]>(
+    []
+  );
+  const [loading, setLoading] = React.useState(true);
+
+  const [activeTab, setActiveTab] = React.useState<
+    "all" | "pending" | "created"
+  >("all");
+
+  React.useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const [all, pending, created] = await Promise.all([
+        fetchAllStudents(),
+        fetchPendingEmails(),
+        fetchCreatedEmails(),
+      ]);
+      if (all) setAllStudents(all);
+      if (pending) setPendingStudents(pending);
+      if (created) setCreatedStudents(created);
+      setLoading(false);
+    };
+    load();
+  }, [fetchAllStudents, fetchPendingEmails, fetchCreatedEmails]);
+  const [globalFilter, setGlobalFilter] = React.useState("");
+
+  return (
+    <div className="w-full">
+      {/* Tabs */}
+      <div className="flex space-x-4 mb-4 text-sm font-medium">
+        {["All", "Pending Emails", "Emails Created"].map((tab) => {
+          const value =
+            tab === "All"
+              ? "all"
+              : tab === "Pending Emails"
+              ? "pending"
+              : "created";
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(value as any)}
+              className={`pb-2 ${
+                activeTab === value
+                  ? "border-b-2 border-black"
+                  : "text-gray-500"
+              }`}
+            >
+              {tab}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Search bar (always visible) */}
+      <div className="flex items-center py-4 w-full">
+        <Input
+          placeholder="Search students..."
+          className="max-w-sm"
+          value={globalFilter ?? ""}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+        />
+
+        {/* ✅ Show download/upload buttons ONLY on Pending tab */}
+        {activeTab === "pending" && (
+          <div className="ml-auto flex gap-2">
+            <Button
+              className="bg-green-600 text-white"
+              onClick={() => downloadPendingEmailsExcel(pendingStudents)}
+            >
+              Download Pending Emails
+            </Button>
+            <Link to="/nstsps/IT/email-batch">
+              <Button className="bg-[#00ACED] text-white">Upload Emails</Button>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Tab content */}
+      {activeTab === "all" && (
+        <StudentTableContent
+          data={allStudents}
+          loading={loading}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+        />
+      )}
+      {activeTab === "pending" && (
+        <StudentTableContent
+          data={pendingStudents}
+          loading={loading}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+        />
+      )}
+      {activeTab === "created" && (
+        <StudentTableContent
+          data={createdStudents}
+          loading={loading}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+        />
+      )}
     </div>
   );
 }

@@ -13,12 +13,11 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -40,13 +39,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { useMasterFile } from "@/context/master-file-context";
 import { Link } from "react-router-dom";
 
-// 👇 Same StudentInfo interface
 export type StudentInfo = {
   user_id: string;
   master_file_id: string;
@@ -137,7 +134,6 @@ export function StudentTableAdmission() {
   const [students, setStudents] = React.useState<StudentInfo[]>([]);
   const [loading, setLoading] = React.useState(true);
 
-  // 👇 dialog state
   const [selectedStudent, setSelectedStudent] =
     React.useState<StudentInfo | null>(null);
 
@@ -178,6 +174,39 @@ export function StudentTableAdmission() {
       columnVisibility,
       rowSelection,
       globalFilter,
+    },
+    globalFilterFn: (row, columnId, filterValue) => {
+      const student = row.original as StudentInfo;
+
+      const haystackParts = [
+        student.student_id,
+        student.surname,
+        student.first_name,
+        student.middle_name ?? "",
+        student.program_name,
+        (row.getValue("email") as string) ?? "",
+      ];
+
+      const fullName1 = `${student.surname}, ${[
+        student.first_name,
+        student.middle_name,
+      ]
+        .filter(Boolean)
+        .join(" ")}`;
+      const fullName2 = [
+        student.first_name,
+        student.middle_name,
+        student.surname,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const haystack = [...haystackParts, fullName1, fullName2]
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+
+      return haystack.includes(filterValue.toLowerCase().trim());
     },
   });
 
@@ -241,7 +270,7 @@ export function StudentTableAdmission() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={() => setSelectedStudent(row.original)} // 👈 row click only
+                  onClick={() => setSelectedStudent(row.original)}
                   className="cursor-pointer hover:bg-gray-100"
                 >
                   {row.getVisibleCells().map((cell) => (

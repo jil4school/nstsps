@@ -28,7 +28,7 @@ interface StudentInfo {
   guardian_first_name?: string;
   relation_with_the_student?: string;
   guardian_mobile_number?: string;
-  email:string;
+  email: string;
   guardian_email?: string;
 }
 
@@ -39,8 +39,12 @@ interface MasterFileContextType {
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
   fetchAllStudents: () => Promise<StudentInfo[] | null>;
-  insertStudent: (data: StudentInfo) => Promise<boolean>; // 🔹 new
-  insertMultipleStudents: (data: StudentInfo[]) => Promise<boolean>; // 🔹 added here
+  insertStudent: (data: StudentInfo) => Promise<boolean>;
+  insertMultipleStudents: (data: StudentInfo[]) => Promise<boolean>;
+  downloadSPSEmail: () => Promise<void>;
+  uploadSPSEmail: (file: File) => Promise<boolean>;
+  fetchPendingEmails: () => Promise<StudentInfo[] | null>; // 👈 new
+  fetchCreatedEmails: () => Promise<StudentInfo[] | null>; // 👈 new
 }
 
 const MasterFileContext = createContext<MasterFileContextType | undefined>(
@@ -138,7 +142,6 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 🔹 New function: Fetch all students
   const fetchAllStudents = async (): Promise<StudentInfo[] | null> => {
     try {
       const response = await axios.get(
@@ -158,6 +161,29 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
         "Failed to fetch all students";
       setError(message);
       return null;
+    }
+  };
+
+  const downloadSPSEmail = async (): Promise<void> => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/SPSEmailUploadController.php",
+        { responseType: "blob" }
+      );
+
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: "text/csv;charset=utf-8" })
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "SPSEmail.csv"); // keep .csv
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success("SPSEmail.csv downloaded successfully!");
+    } catch (err: any) {
+      toast.error("Failed to download SPSEmail.csv");
     }
   };
 
@@ -189,6 +215,82 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // 🔹 New function: Upload SPSEmail Excel
+  const uploadSPSEmail = async (file: File): Promise<boolean> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/SPSEmailUploadController.php", // 👈 FIXED path
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true, // keep if you need session/cookies
+        }
+      );
+
+      if (response.data && !response.data.error) {
+        toast.success(response.data.message || "Excel uploaded successfully!");
+        return true;
+      } else {
+        setError(response.data.error || "Upload failed");
+        toast.error("Upload failed");
+        return false;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Upload request failed";
+      setError(message);
+      toast.error(message);
+      return false;
+    }
+  };
+
+  // 🔹 Fetch pending emails (not yet using @nst.edu.ph / @my.nst.edu.ph)
+  const fetchPendingEmails = async (): Promise<StudentInfo[] | null> => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/MasterFileController.php?type=pending"
+      );
+      if (response.data && !response.data.error) {
+        return response.data as StudentInfo[];
+      } else {
+        setError(response.data.error || "Failed to fetch pending emails");
+        return null;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Failed to fetch pending emails";
+      setError(message);
+      return null;
+    }
+  };
+
+  // 🔹 Fetch created emails (students with @my.nst.edu.ph)
+  const fetchCreatedEmails = async (): Promise<StudentInfo[] | null> => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/MasterFileController.php?type=created"
+      );
+      if (response.data && !response.data.error) {
+        return response.data as StudentInfo[];
+      } else {
+        setError(response.data.error || "Failed to fetch created emails");
+        return null;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Failed to fetch created emails";
+      setError(message);
+      return null;
+    }
+  };
+
   const value: MasterFileContextType = {
     student,
     fetchStudentInfo,
@@ -198,6 +300,10 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     fetchAllStudents,
     insertStudent,
     insertMultipleStudents,
+    downloadSPSEmail,
+    uploadSPSEmail,
+    fetchPendingEmails, // 👈 added
+    fetchCreatedEmails, // 👈 added
   };
 
   return (

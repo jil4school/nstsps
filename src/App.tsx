@@ -45,7 +45,7 @@ const routes = [
   { path: "/nstsps/admission/new-student-single", element: <NewStudentSingle /> },
   { path: "/nstsps/admission/new-student-batch", element: <NewStudentBatch /> },
     { path: "/nstsps/IT-home", element: <ITHome /> },
-    { path: "/nstsps/admission/email-batch", element: <EmailBatch /> },
+    { path: "/nstsps/IT/email-batch", element: <EmailBatch /> },
 ];
 
 function App() {

@@ -7,20 +7,20 @@ import axios from "axios";
 
 const downloadTemplate = () => {
   const link = document.createElement("a");
-  link.href = "http://localhost/NSTSPS_API/template/MasterFileBulk.xlsx";
-  link.setAttribute("download", "MasterFileBulk.xlsx");
+  link.href = "http://localhost/NSTSPS_API/template/MasterFile.xlsx";
+  link.setAttribute("download", "MasterFile.xlsx");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
 
 export default function NewStudentBatch() {
-  // Map Excel column headers -> DB field names
   const headerMapping: Record<string, string> = {
     "Student ID": "student_id",
     Surname: "surname",
     "First Name": "first_name",
     "Middle Name": "middle_name",
+    Email: "email",
     Program: "program_id", // ⚡ handled separately
     Gender: "gender",
     Nationality: "nationality",
@@ -46,13 +46,11 @@ export default function NewStudentBatch() {
     for (const key in row) {
       if (headerMapping[key]) {
         if (key === "Program") {
-          // Find program_id from text
           const program = programs.find(
             (p) => p.program_name.toLowerCase() === row[key].toLowerCase()
           );
           mapped["program_id"] = program ? program.program_id : null;
         } else if (key === "Birthday") {
-          // Always format birthday to YYYY-MM-DD or 0000-00-00
           const value = row[key];
           if (value) {
             const d = new Date(value);
@@ -104,7 +102,7 @@ export default function NewStudentBatch() {
       const arrayBuffer = evt.target.result;
       const workbook = XLSX.read(arrayBuffer, {
         type: "array",
-        cellDates: true, // <--- tell xlsx to treat cells as dates
+        cellDates: true,
       });
 
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -113,7 +111,7 @@ export default function NewStudentBatch() {
         header: 0,
         defval: "",
         blankrows: false,
-        raw: false, // <--- ensures Excel dates are formatted as text (e.g. "2003-02-15")
+        raw: false,
       });
 
       if (!rawData || rawData.length === 0) {
@@ -180,7 +178,6 @@ export default function NewStudentBatch() {
   const handleSubmit = async () => {
     try {
       const cleanedData = data.map((row) => {
-        // map Excel headers to DB fields + resolve program_id
         return mapRowToBackend(row, programs);
       });
 
@@ -210,81 +207,88 @@ export default function NewStudentBatch() {
       <div className="flex flex-row h-screen w-screen bg-white mt-20">
         <HeaderAdmin />
         <div className="w-full bg-white">
-          <h1 className="text-xl font-semibold mb-6 pl-10 pr-10 pt-10">Batch Upload</h1>
+          <h1 className="text-xl font-semibold mb-6 pl-10 pr-10 pt-10">
+            Batch Upload
+          </h1>
           <div className="flex justify-center w-full">
-  <div className="border border-dashed rounded-md p-6 bg-gray-50 text-sm text-gray-700 space-y-2 w-full ml-10 mr-10">
-    <p>
-      1. Download the{" "}
-      <button
-        onClick={downloadTemplate}
-        className="text-blue-600 underline hover:text-blue-800"
-      >
-        template
-      </button>{" "}
-      (provided in .xlsx format, do not rename or alter column
-      structure).
-    </p>
-    <p>
-      2. Fill in all required fields by completing each row with
-      correct data formats without removing or rearranging columns.
-    </p>
-    <p>3. Limit entries to 100 row per file.</p>
-    <p>
-      4. Validate your data by checking for missing fields, incorrect
-      formats, or duplicates before uploading.
-    </p>
-    <p>5. Upload the file below by selecting your completed file.</p>
-  </div>
-</div>
+            <div className="border border-dashed rounded-md p-6 bg-gray-50 text-sm text-gray-700 space-y-2 w-full ml-10 mr-10">
+              <p>
+                1. Download the{" "}
+                <button
+                  onClick={downloadTemplate}
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  template
+                </button>{" "}
+                (provided in .xlsx format, do not rename or alter column
+                structure).
+              </p>
+              <p>
+                2. Fill in all required fields by completing each row with
+                correct data formats without removing or rearranging columns.
+              </p>
+              <p>3. Limit entries to 100 row per file.</p>
+              <p>
+                4. Validate your data by checking for missing fields, incorrect
+                formats, or duplicates before uploading.
+              </p>
+              <p>5. Upload the file below by selecting your completed file.</p>
+            </div>
+          </div>
 
-<div className="mt-6 flex justify-center w-full">
-  <div className="border border-dashed rounded-md p-6 bg-gray-50 text-sm text-gray-700 w-full ml-10 mr-10">
-    <label
-      htmlFor="file-upload"
-      className="flex flex-col items-center justify-center w-full cursor-pointer"
-    >
-      <svg
-        className="w-8 h-8 text-gray-400 mb-2"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l-4-4m4 4l4-4"
-        ></path>
-      </svg>
-      <p className="text-sm text-gray-600">
-        <span className="font-medium text-blue-600">Click to upload</span>
-      </p>
-      <p className="text-xs text-gray-400 mt-1">Only .xlsx files are allowed</p>
-      <input
-        id="file-upload"
-        ref={fileInputRef}
-        type="file"
-        accept=".xlsx"
-        className="hidden"
-        onChange={handleFileUpload}
-      />
-    </label>
+          <div className="mt-6 flex justify-center w-full">
+            <div className="border border-dashed rounded-md p-6 bg-gray-50 text-sm text-gray-700 w-full ml-10 mr-10">
+              <label
+                htmlFor="file-upload"
+                className="flex flex-col items-center justify-center w-full cursor-pointer"
+              >
+                <svg
+                  className="w-8 h-8 text-gray-400 mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l-4-4m4 4l4-4"
+                  ></path>
+                </svg>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium text-blue-600">
+                    Click to upload
+                  </span>
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Only .xlsx files are allowed
+                </p>
+                <input
+                  id="file-upload"
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </label>
 
-    {data.length > 0 && (
-      <div className="mt-2 flex justify-between items-center">
-        <p className="text-sm text-green-600 font-medium">✅ File uploaded</p>
-        <button
-          onClick={handleClearFile}
-          className="text-red-600 underline hover:text-red-800 text-sm"
-        >
-          Remove File
-        </button>
-      </div>
-    )}
-  </div>
-</div>
-
+              {data.length > 0 && (
+                <div className="mt-2 flex justify-between items-center">
+                  <p className="text-sm text-green-600 font-medium">
+                    ✅ File uploaded
+                  </p>
+                  <button
+                    onClick={handleClearFile}
+                    className="text-red-600 underline hover:text-red-800 text-sm"
+                  >
+                    Remove File
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
           {data.length > 0 && (
             <div className="mt-6">
@@ -329,7 +333,8 @@ export default function NewStudentBatch() {
               </button>
             </div>
           )}
-      </div></div>
+        </div>
+      </div>
     </>
   );
 }

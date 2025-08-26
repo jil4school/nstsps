@@ -38,6 +38,7 @@ const formSchema = z.object({
   surname: z.string(),
   first_name: z.string(),
   middle_name: z.string(),
+  email: z.string(),
   gender: z.string(),
   nationality: z.string(),
   civil_status: z.string(),
@@ -96,6 +97,7 @@ function NewStudentSingle() {
       surname: "",
       first_name: "",
       middle_name: "",
+      email: "",
       gender: "",
       nationality: "",
       civil_status: "",
@@ -232,6 +234,26 @@ function NewStudentSingle() {
                     <FormControl>
                       <Input
                         placeholder="Middle Name"
+                        {...field}
+                        className="w-110"
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex flex-row mt-5 items-center">
+              <span className="pl-15 w-100">Middle Name*:</span>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="Email"
                         {...field}
                         className="w-110"
                         onChange={(e) => field.onChange(e.target.value)}
