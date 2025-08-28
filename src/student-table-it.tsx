@@ -361,7 +361,6 @@ export function StudentTableIT() {
           onChange={(e) => setGlobalFilter(e.target.value)}
         />
 
-        {/* ✅ Show download/upload buttons ONLY on Pending tab */}
         {activeTab === "pending" && (
           <div className="ml-auto flex gap-2">
             <Button

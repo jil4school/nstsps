@@ -8,9 +8,18 @@ interface Program {
   program_name: string;
 }
 
+type Course = {
+  course_id: string;
+  course_description: string;
+  course_code: string;
+  unit: number;
+};
+
 interface ProgramContextType {
   programs: Program[];
+  programCourses: Course[];
   fetchPrograms: () => Promise<void>;
+  fetchProgramCourses: (programId: string) => Promise<void>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
 }
@@ -19,6 +28,7 @@ const ProgramContext = createContext<ProgramContextType | undefined>(undefined);
 
 export const ProgramProvider = ({ children }: { children: ReactNode }) => {
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [programCourses, setProgramCourses] = useState<Course[]>([]); // ✅ Added state
   const [error, setError] = useState<string | null>(null);
 
   const fetchPrograms = async (): Promise<void> => {
@@ -38,19 +48,39 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Program request failed";
-
       setError(message);
       setPrograms([]);
     }
   };
 
-  useEffect(() => {
-    fetchPrograms();
-  }, []);
+  // ✅ Fixed function
+  const fetchProgramCourses = async (programId: string): Promise<void> => {
+    try {
+      const response = await axios.get(
+        `http://localhost/NSTSPS_API/controller/ProgramCoursesController.php?program_id=${programId}`
+      );
+
+      if (Array.isArray(response.data)) {
+        setProgramCourses(response.data);
+        setError(null);
+      } else {
+        setProgramCourses([]);
+        toast.error("Failed to fetch courses.");
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Course request failed";
+      setError(message);
+      setProgramCourses([]);
+      toast.error(message);
+    }
+  };
 
   const value: ProgramContextType = {
     programs,
+    programCourses, // ✅ Expose it
     fetchPrograms,
+    fetchProgramCourses,
     error,
     setError,
   };

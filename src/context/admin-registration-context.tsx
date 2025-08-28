@@ -21,8 +21,8 @@ type Registration = {
   course_codes?: string[];
   course_descriptions?: string[];
   units?: number[];
+  reg_courses_id?: number[];
 };
-
 type RegistrationContextType = {
   registrations: Registration[];
   loading: boolean;
@@ -35,24 +35,39 @@ type RegistrationContextType = {
   getRequestByRegistrationId: (
     registrationId: string
   ) => Promise<string | null>;
+  updateRegistration: (
+    registrationId: string,
+    masterFileId: string,
+    userId: string,
+    courses: { reg_courses_id: number; course_id: number }[] // ✅ match here
+  ) => Promise<boolean>;
 };
 
-const RegistrationContext = createContext<RegistrationContextType>({
+
+const AdminRegistrationContext = createContext<RegistrationContextType>({
   registrations: [],
   loading: false,
   error: null,
   getRegistrationById: async () => null,
   getRequestByRegistrationId: async () => null,
+  updateRegistration: async (
+    _registrationId: string,
+    _masterFileId: string,
+    _userId: string,
+    _courses: { reg_courses_id: number; course_id: number }[]
+  ) => false,
 });
 
-export const StudentRegistrationProvider: React.FC<{
+
+export const AdminRegistrationProvider: React.FC<{
   children: React.ReactNode;
-}> = ({ children }) => {
+  userId: string;
+}> = ({ children, userId }) => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { fetchStudentInfo } = useMasterFile();
-  const { user } = useLogin();
+
   const fetchRegistrationData = async (userId: string) => {
     try {
       const response = await axios.get(
@@ -124,6 +139,7 @@ export const StudentRegistrationProvider: React.FC<{
         course_codes: item.course_codes || [],
         course_descriptions: item.course_descriptions || [],
         units: item.units || [],
+         reg_courses_id: item.reg_courses_id || [], // ✅ include this
       };
     } catch (err) {
       toast.error(
@@ -150,26 +166,63 @@ export const StudentRegistrationProvider: React.FC<{
       return null;
     }
   };
-  useEffect(() => {
-    if (user?.user_id) {
-      fetchRegistrationData(user.user_id.toString());
-      fetchStudentInfo(user.user_id.toString());
+
+  const updateRegistration = async (
+  registrationId: string,
+  masterFileId: string,
+  userId: string,
+  courses: { reg_courses_id: number; course_id: number }[]
+): Promise<boolean> => {
+  try {
+    const response = await axios.post(
+      "http://localhost/NSTSPS_API/controller/RegistrationController.php",
+      {
+        registration_id: registrationId,
+        master_file_id: masterFileId,
+        user_id: userId,
+        courses, // ✅ include reg_courses_id
+      }
+    );
+
+    if (response.data.success) {
+      toast.success("Registration updated successfully!");
+      await fetchRegistrationData(userId);
+      return true;
+    } else {
+      console.log("Update response:", response.data); // 🔹 log for debugging
+      toast.error(response.data.error || "Failed to update registration");
+      return false;
     }
-  }, [user?.user_id]);
+  } catch (err) {
+    console.error(err);
+    toast.error("Error updating registration");
+    return false;
+  }
+};
+
+
+  useEffect(() => {
+    if (userId) {
+      fetchRegistrationData(userId);
+      fetchStudentInfo(userId);
+    }
+  }, [userId]);
 
   return (
-    <RegistrationContext.Provider
+    <AdminRegistrationContext.Provider
       value={{
         registrations,
         loading,
         error,
         getRegistrationById,
         getRequestByRegistrationId,
+        updateRegistration, // ✅ added
       }}
     >
       {children}
-    </RegistrationContext.Provider>
+    </AdminRegistrationContext.Provider>
   );
 };
 
-export const useRegistrationContext = () => useContext(RegistrationContext);
+export const useAdminRegistrationContext = () =>
+  useContext(AdminRegistrationContext);

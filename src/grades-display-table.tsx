@@ -85,7 +85,7 @@ useEffect(() => {
         <TableRow>
           <TableHead>S/ID.</TableHead>
           <TableHead>STUDENT NAME</TableHead>
-          <TableHead>S.Y.</TableHead>
+          <TableHead>SCHOOL YEAR</TableHead>
           <TableHead>SEMESTER</TableHead>
           <TableHead>PROGRAM</TableHead>
         </TableRow>
@@ -103,7 +103,7 @@ useEffect(() => {
                 {studentReg.student_id}
               </TableCell>
               <TableCell>{studentReg.studentName}</TableCell>
-              <TableCell>{studentReg.registration_date}</TableCell>
+              <TableCell>{studentReg.school_year}</TableCell>
               <TableCell>{studentReg.sem}</TableCell>
               <TableCell>{studentReg.program_name}</TableCell>
             </TableRow>

@@ -8,11 +8,8 @@ import {
 } from "@/components/ui/table";
 import { useRegistrationContext } from "@/context/registration-context";
 import React, { useEffect, useState } from "react";
-import logo from "./assets/logoo.png";
 import { useMasterFile } from "./context/master-file-context";
 import { useLogin } from "./context/login-context";
-
-// paste your getRegistrationById function here if it's not imported
 
 function RegistrationDetailsTable() {
   const { user } = useLogin();
@@ -80,6 +77,7 @@ function RegistrationDetailsTable() {
           <TableHead>S/ID.</TableHead>
           <TableHead>STUDENT NAME</TableHead>
           <TableHead>REG DATE</TableHead>
+          <TableHead>SCHOOL YEAR</TableHead>
           <TableHead>SEMESTER</TableHead>
           <TableHead>PROGRAM</TableHead>
         </TableRow>
@@ -108,15 +106,15 @@ function RegistrationDetailsTable() {
                 </TableCell>
                 <TableCell>{studentt.studentName}</TableCell>
                 <TableCell>{studentt.registration_date}</TableCell>
+                <TableCell>{studentt.school_year}</TableCell>
                 <TableCell>{studentt.sem}</TableCell>
                 <TableCell>{studentt.program_name}</TableCell>
               </TableRow>
 
               {expandedRow === index && (
                 <TableRow>
-                  <TableCell colSpan={5} className="p-0">
+                  <TableCell colSpan={6} className="p-0">
                     <div className="bg-white p-4 shadow-inner">
-                      <img src={logo} alt="Logo" className="w-40 h-10" />
                       <div className="flex justify-center mb-3">
                         <span className="FLEX text-lg font-semibold justify-self-center">
                           COURSES

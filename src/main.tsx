@@ -6,7 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { LoginProvider } from "./context/login-context.tsx";
 import { MasterFileProvider } from "./context/master-file-context.tsx";
 import { ProgramProvider } from "./context/miscellaneous-context.tsx";
-import { RegistrationProvider } from "./context/registration-context.tsx";
+import { StudentRegistrationProvider } from "./context/registration-context.tsx";
 import { GradesProvider } from "./context/grades-context.tsx";
 import { RequestProvider } from "./context/request-context.tsx";
 import { Toaster } from "./components/ui/sonner.tsx";
@@ -18,16 +18,16 @@ createRoot(document.getElementById("root")!).render(
       <LoginProvider>
         <ProgramProvider>
           <MasterFileProvider>
-            <RegistrationProvider>
-              <GradesProvider>
-                <RequestProvider>
-                  <AccountingProvider>
-                    <Toaster />
-                    <App />
-                  </AccountingProvider>
-                </RequestProvider>
-              </GradesProvider>
-            </RegistrationProvider>
+              <StudentRegistrationProvider>
+                <GradesProvider>
+                  <RequestProvider>
+                    <AccountingProvider>
+                      <Toaster />
+                      <App />
+                    </AccountingProvider>
+                  </RequestProvider>
+                </GradesProvider>
+              </StudentRegistrationProvider>
           </MasterFileProvider>
         </ProgramProvider>
       </LoginProvider>

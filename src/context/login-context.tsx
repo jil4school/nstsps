@@ -27,7 +27,20 @@ interface LoginContextType {
 const LoginContext = createContext<LoginContextType | undefined>(undefined);
 
 export const LoginProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUserId = localStorage.getItem("user_id");
+    const storedEmail = localStorage.getItem("user_email");
+    const storedRole = localStorage.getItem("role");
+
+    return storedUserId && storedEmail && storedRole
+      ? {
+          user_id: parseInt(storedUserId, 10),
+          email: storedEmail,
+          role: storedRole,
+        }
+      : null;
+  });
+
   const [error, setError] = useState<string | null>(null);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -45,8 +58,12 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         const userId = response.data.user_id;
         const role = response.data.role;
 
-        setUser({ user_id: userId, email, role });
+        const newUser: User = { user_id: userId, email, role };
+        setUser(newUser);
+
+        // persist
         localStorage.setItem("user_id", String(userId));
+        localStorage.setItem("user_email", email);
         localStorage.setItem("role", role);
 
         setError(null);
@@ -65,41 +82,25 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    const storedUserId = localStorage.getItem("user_id");
-    const storedEmail = localStorage.getItem("user_email"); // works now
-    const storedRole = localStorage.getItem("role");
-    if (storedUserId && storedEmail && storedRole) {
-      setUser({
-        user_id: parseInt(storedUserId, 10),
-        email: storedEmail,
-        role: storedRole,
-      });
-    }
-  }, []);
-
   const logout = async () => {
     try {
-      // optional: notify backend
       await axios.post(
         "http://localhost/NSTSPS_API/Logout.php",
-        { user_id: user?.user_id }, // if your API expects it
+        { user_id: user?.user_id },
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // clear local data
       localStorage.removeItem("user_id");
       localStorage.removeItem("user_email");
       localStorage.removeItem("role");
 
       setUser(null);
       toast.success("Logged out successfully");
-
-      // redirect to login page
       window.location.href = "http://localhost:5173/nstsps/";
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Logout failed";
+      setError(message);
     }
   };
 
@@ -145,7 +146,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
     user,
     login,
     logout,
-    changePassword, // add here
+    changePassword,
     error,
     setError,
     setUser,
@@ -155,6 +156,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
     <LoginContext.Provider value={value}>{children}</LoginContext.Provider>
   );
 };
+
 
 export const useLogin = () => {
   const context = useContext(LoginContext);

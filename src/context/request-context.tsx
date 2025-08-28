@@ -4,6 +4,7 @@ import type { ReactNode, Dispatch, SetStateAction } from "react";
 import { toast, Toaster } from "sonner";
 
 interface RequestData {
+  request_id: string;
   user_id: number;
   master_file_id: number;
   request: string;
@@ -11,6 +12,7 @@ interface RequestData {
   request_purpose: string;
   mode_of_payment: string;
   receipt?: File;
+  status?: string;
 }
 
 interface RequestContextType {
@@ -18,6 +20,11 @@ interface RequestContextType {
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
   loading: boolean;
+  getAllRequests: () => Promise<any[]>;
+  updateRequestStatus: (
+    requestId: string,
+    status: string
+  ) => Promise<any | null>;
 }
 
 const RequestContext = createContext<RequestContextType | undefined>(undefined);
@@ -53,7 +60,7 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setError(null);
         toast.success("Request successfully submitted");
-       setTimeout(() => {
+        setTimeout(() => {
           window.location.reload();
         }, 1500);
       }
@@ -65,18 +72,53 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
+  // in registration-context.tsx
+  const getAllRequests = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/RequestController.php"
+      );
+      return response.data || [];
+    } catch (err) {
+      toast.error("Failed to fetch requests");
+      return [];
+    }
+  };
+
+  const updateRequestStatus = async (requestId: string, status: string) => {
+    try {
+      const response = await axios.put(
+        "http://localhost/NSTSPS_API/controller/RequestController.php",
+        {
+          request_id: requestId,
+          status,
+        }
+      );
+
+      toast.success(`Request updated to ${status}`);
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+
+      return response.data;
+    } catch (err) {
+      toast.error("Failed to update request status");
+      return null;
+    }
+  };
 
   const value: RequestContextType = {
     createRequest,
     error,
     setError,
     loading,
+    getAllRequests,
+    updateRequestStatus,
   };
 
   return (
-    <RequestContext.Provider value={value}>
-      {children}
-    </RequestContext.Provider>
+    <RequestContext.Provider value={value}>{children}</RequestContext.Provider>
   );
 };
 

@@ -30,6 +30,7 @@ interface StudentInfo {
   guardian_mobile_number?: string;
   email: string;
   guardian_email?: string;
+  year_level?: string;
 }
 
 interface MasterFileContextType {
@@ -54,7 +55,7 @@ const MasterFileContext = createContext<MasterFileContextType | undefined>(
 export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
   const [student, setStudent] = useState<StudentInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { user, setUser } = useLogin();
+  const { user } = useLogin();
 
   useEffect(() => {
     if (user?.user_id) {
@@ -62,9 +63,6 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  const logout = () => {
-    setUser(null);
-  };
   const fetchStudentInfo = async (user_id: string): Promise<void> => {
     try {
       const response = await axios.get(

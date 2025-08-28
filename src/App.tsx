@@ -12,6 +12,8 @@ import NewStudentSingle from "./new-student-form-single";
 import NewStudentBatch from "./new-student-form-batch";
 import ITHome from "./it-admin";
 import EmailBatch from "./email-batch";
+import RegistrarHome from "./registrar-admin";
+import StudentRegistrationsContent, { StudentRegistrations } from "./student-registrations";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -42,10 +44,18 @@ const routes = [
     element: <ChangePassword />,
   },
   { path: "/nstsps/admission-home", element: <AdmissionHome /> },
-  { path: "/nstsps/admission/new-student-single", element: <NewStudentSingle /> },
+  {
+    path: "/nstsps/admission/new-student-single",
+    element: <NewStudentSingle />,
+  },
   { path: "/nstsps/admission/new-student-batch", element: <NewStudentBatch /> },
-    { path: "/nstsps/IT-home", element: <ITHome /> },
-    { path: "/nstsps/IT/email-batch", element: <EmailBatch /> },
+  { path: "/nstsps/IT-home", element: <ITHome /> },
+  { path: "/nstsps/IT/email-batch", element: <EmailBatch /> },
+  { path: "/nstsps/registrar-home", element: <RegistrarHome /> },
+  {
+    path: "/nstsps/registrar/student-registrations/:combinedId",
+    element: <StudentRegistrations />, // <-- wrapper na may useParams
+  },
 ];
 
 function App() {
