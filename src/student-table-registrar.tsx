@@ -44,6 +44,7 @@ import {
 import { useMasterFile } from "@/context/master-file-context";
 import { useRequest } from "./context/request-context";
 import { Link } from "react-router-dom";
+import { useProgram } from "./context/miscellaneous-context";
 
 export type StudentInfo = {
   user_id: string;
@@ -134,7 +135,7 @@ const actionsColumn = (activeTab: string): ColumnDef<StudentInfo> => ({
     const student = row.original;
     const { updateRequestStatus } = useRequest();
 
-    if (activeTab === "pending") {
+    if (activeTab === "pending requests") {
       return (
         <div className="flex gap-2">
           <Button
@@ -164,7 +165,7 @@ const actionsColumn = (activeTab: string): ColumnDef<StudentInfo> => ({
       );
     }
 
-    if (activeTab === "processing") {
+    if (activeTab === "processing requests") {
       return (
         <Button
           size="sm"
@@ -179,7 +180,7 @@ const actionsColumn = (activeTab: string): ColumnDef<StudentInfo> => ({
       );
     }
 
-    if (activeTab === "archive") {
+    if (activeTab === "archive requests") {
       return (
         <Button
           size="sm"
@@ -251,10 +252,48 @@ const extraColumns: ColumnDef<StudentInfo>[] = [
   },
 ];
 
+// Table column type
+export type CourseInfo = {
+  sem: string;
+  year_level: string;
+  course_id: string;
+  course_code: string;
+  course_description: string;
+  unit: number;
+};
+
+const courseColumns: ColumnDef<CourseInfo>[] = [
+  {
+    id: "course_code",
+    header: () => <div className="text-left">Course Code</div>,
+    accessorFn: (row) => row.course_code,
+    cell: (info) => <div className="text-left">{String(info.getValue())}</div>,
+  },
+  {
+    id: "course_description",
+    header: () => <div className="text-left">Description</div>,
+    accessorFn: (row) => row.course_description,
+    cell: (info) => <div className="text-left">{String(info.getValue())}</div>,
+  },
+  {
+    id: "units",
+    header: () => <div className="text-left">Units</div>,
+    accessorFn: (row) => row.unit,
+    cell: (info) => <div className="text-left">{String(info.getValue())}</div>,
+  },
+];
+
 export function StudentTableRegistrar() {
+  const {
+    programs,
+    programCourses,
+    fetchPrograms,
+    fetchGroupedProgramCourses,
+  } = useProgram();
+  const [selectedProgram, setSelectedProgram] = React.useState<string>("");
   const { fetchAllStudents } = useMasterFile();
   const { getRequestByRegistrationId } = useRegistrationContext();
-  const { getAllRequests, updateRequestStatus } = useRequest();
+  const { getAllRequests } = useRequest();
   const [students, setStudents] = React.useState<StudentInfo[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -274,6 +313,7 @@ export function StudentTableRegistrar() {
 
   const [receiptDialogOpen, setReceiptDialogOpen] = React.useState(false);
   const [receiptUrl, setReceiptUrl] = React.useState<string | null>(null);
+  const [courses, setCourses] = React.useState<CourseInfo[]>([]);
 
   // Function to open receipt dialog
   const handleViewReceipt = (receipt: string) => {
@@ -306,15 +346,22 @@ export function StudentTableRegistrar() {
     };
 
     loadStudents();
-  }, [fetchAllStudents, getRequestByRegistrationId]);
+  }, []);
 
   const [activeTab, setActiveTab] = React.useState<
-    "students" | "pending" | "processing" | "archive"
+    | "students"
+    | "courses"
+    | "pending requests"
+    | "processing requests"
+    | "archive requests"
   >("students");
 
   const columns = React.useMemo(() => {
     if (activeTab === "students") {
       return [...baseColumns, actionsColumn(activeTab)];
+    }
+    if (activeTab === "courses") {
+      return courseColumns;
     }
 
     return [...baseColumns, ...extraColumns, actionsColumn(activeTab)];
@@ -327,6 +374,11 @@ export function StudentTableRegistrar() {
       if (activeTab === "students") {
         const data = await fetchAllStudents();
         setStudents(data || []);
+      } else if (activeTab === "courses") {
+        fetchPrograms(); // fetch programs from context if not already loaded
+        if (selectedProgram) {
+          fetchGroupedProgramCourses(selectedProgram); // populate programCourses
+        }
       } else {
         const requests = await getAllRequests();
 
@@ -350,15 +402,15 @@ export function StudentTableRegistrar() {
           status: req.status ?? "",
         }));
 
-        if (activeTab === "pending") {
+        if (activeTab === "pending requests") {
           withStudentData = withStudentData.filter(
             (r) => r.status === "Pending"
           );
-        } else if (activeTab === "processing") {
+        } else if (activeTab === "processing requests") {
           withStudentData = withStudentData.filter(
             (r) => r.status === "Processing"
           );
-        } else if (activeTab === "archive") {
+        } else if (activeTab === "archive requests") {
           withStudentData = withStudentData.filter(
             (r) => r.status === "Processed" || r.status === "Declined"
           );
@@ -427,15 +479,46 @@ export function StudentTableRegistrar() {
     },
   });
 
+  const courseGroups = [
+    { year: "1st Year", sem: "First Sem" },
+    { year: "1st Year", sem: "Second Sem" },
+    { year: "2nd Year", sem: "First Sem" },
+    { year: "2nd Year", sem: "Second Sem" },
+    { year: "3rd Year", sem: "First Sem" },
+    { year: "3rd Year", sem: "Second Sem" },
+    { year: "4th Year", sem: "First Sem" },
+    { year: "4th Year", sem: "Second Sem" },
+  ];
+
+  React.useEffect(() => {
+    if (activeTab === "courses") {
+      fetchPrograms();
+    }
+  }, [activeTab, fetchPrograms]);
+
+  React.useEffect(() => {
+    if (selectedProgram) {
+      fetchGroupedProgramCourses(selectedProgram); // just call it
+    }
+  }, [selectedProgram]);
+  // Inside StudentTableRegistrar
+React.useEffect(() => {
+  if (activeTab === "courses" && programs.length > 0 && !selectedProgram) {
+    setSelectedProgram(programs[0].program_id); // select the first program
+  }
+}, [activeTab, programs, selectedProgram]);
+
+
   return (
     <div className="w-full">
       {/* Tabs */}
       <div className="flex space-x-4 mb-4 text-sm font-medium">
         {[
           { label: "Students", value: "students" },
-          { label: "Pending", value: "pending" },
-          { label: "Processing", value: "processing" },
-          { label: "Archive", value: "archive" },
+          { label: "Courses", value: "courses" },
+          { label: "Pending Requests", value: "pending requests" },
+          { label: "Processing Requests", value: "processing requests" },
+          { label: "Archive Requests", value: "archive requests" },
         ].map((tab) => (
           <button
             key={tab.value}
@@ -453,12 +536,30 @@ export function StudentTableRegistrar() {
 
       {/* Search bar */}
       <div className="flex items-center justify-between py-4 w-full">
-        <Input
-          placeholder="Search..."
-          value={globalFilter ?? ""}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-sm"
-        />
+        {activeTab === "courses" ? (
+          <select
+            value={selectedProgram}
+            onChange={(e) => {
+              setSelectedProgram(e.target.value);
+              console.log("Selected Program ID:", e.target.value);
+            }}
+            className="border rounded p-2"
+          >
+            <option value="">Select Program</option>
+            {programs.map((program) => (
+              <option key={program.program_id} value={program.program_id}>
+                {program.program_name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <Input
+            placeholder="Search..."
+            value={globalFilter ?? ""}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="max-w-sm"
+          />
+        )}
 
         {activeTab === "students" && (
           <Link to="/nstsps/registrar/student-registration">
@@ -468,270 +569,349 @@ export function StudentTableRegistrar() {
           </Link>
         )}
       </div>
+      {activeTab === "courses" ? (
+        <div className="space-y-8">
+          {["1st Year", "2nd Year", "3rd Year", "4th Year"].map((year) => (
+            <div key={year}>
+              <h2 className="text-lg font-semibold">{year}</h2>
+              <hr className="my-2 border-gray-300" />
 
-      <div className="overflow-hidden rounded-md">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  onClick={
-                    activeTab !== "students"
-                      ? () => setSelectedStudent(row.original)
-                      : undefined
-                  }
-                  className="cursor-pointer hover:bg-gray-100"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {activeTab === "students" ? (
-                        <Link
-                          to={`/nstsps/registrar/student-registrations/${row.original.student_id}-${row.original.user_id}`}
-                          key={row.id}
-                          state={{ user_id: row.original.user_id }}
-                          onClick={(e) => e.stopPropagation()} // prevent dialog open
-                          className="block w-full h-full"
-                        >
-                          {flexRender(cell.column.columnDef.cell, {
-                            ...cell.getContext(),
-                          })}
-                        </Link>
-                      ) : (
-                        flexRender(cell.column.columnDef.cell, {
-                          ...cell.getContext(),
-                          rowClickHandler: (e: React.MouseEvent) =>
-                            e.stopPropagation(),
-                        })
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              <div className="grid grid-cols-2 gap-8">
+                {["First Sem", "Second Sem"].map((sem) => {
+                  const groupCourses: CourseInfo[] = programCourses
+                    .filter((c) => c.year_level === year && c.sem === sem)
+                    .map((c) => ({
+                      course_id: c.course_id,
+                      course_code: c.course_code,
+                      course_description: c.course_description,
+                      year_level: c.year_level,
+                      sem: c.sem,
+                      unit: c.unit,
+                    }));
 
-      {/* pagination */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+                  return (
+                    <div key={sem}>
+                      <h3 className="font-medium mb-2">{sem}</h3>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            {courseColumns.map((col) => {
+                              const key =
+                                "id" in col
+                                  ? col.id
+                                  : "accessorKey" in col
+                                  ? col.accessorKey
+                                  : String(col.header);
+                              return (
+                                <TableHead key={key}>
+                                  {flexRender(col.header, {
+                                    column: col,
+                                  } as any)}
+                                </TableHead>
+                              );
+                            })}
+                          </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
+                          {groupCourses.length ? (
+                            groupCourses.map((course) => (
+                              <TableRow key={course.course_id}>
+                                <TableCell>
+                                  {course.course_code ?? "—"}
+                                </TableCell>
+                                <TableCell>
+                                  {course.course_description ?? "—"}
+                                </TableCell>
+                                <TableCell>{course.unit ?? "—"}</TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell
+                                colSpan={3}
+                                className="text-center text-gray-500"
+                              >
+                                No courses
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-
-      {/* dialog for student details */}
-      <Dialog
-        open={!!selectedStudent}
-        onOpenChange={() => setSelectedStudent(null)}
-      >
-        <Dialog
-          open={!!selectedStudent}
-          onOpenChange={() => setSelectedStudent(null)}
-        >
-          <DialogContent className="max-w-lg bg-white">
-            <DialogHeader>
-              <DialogTitle className="text-center">
-                {activeTab === "students"
-                  ? "Student Details"
-                  : "Request Details"}
-              </DialogTitle>
-            </DialogHeader>
-
-            {/* Student Profile Tab */}
-            {selectedStudent && activeTab === "students" && (
-              <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
-                <p>
-                  <strong>Student ID:</strong> {selectedStudent.student_id}
-                </p>
-                <p>
-                  <strong>Surname:</strong> {selectedStudent.surname}
-                </p>
-                <p>
-                  <strong>First Name:</strong> {selectedStudent.first_name}
-                </p>
-                <p>
-                  <strong>Middle Name:</strong>{" "}
-                  {selectedStudent.middle_name ?? "—"}
-                </p>
-                <p>
-                  <strong>Gender:</strong> {selectedStudent.gender}
-                </p>
-                <p>
-                  <strong>Nationality:</strong> {selectedStudent.nationality}
-                </p>
-                <p>
-                  <strong>Civil Status:</strong> {selectedStudent.civil_status}
-                </p>
-                <p>
-                  <strong>Religion:</strong> {selectedStudent.religion}
-                </p>
-                <p>
-                  <strong>Birthday:</strong> {selectedStudent.birthday}
-                </p>
-                <p>
-                  <strong>Birthplace:</strong> {selectedStudent.birthplace}
-                </p>
-                <p>
-                  <strong>Street:</strong> {selectedStudent.street}
-                </p>
-                <p>
-                  <strong>Barangay:</strong> {selectedStudent.barangay}
-                </p>
-                <p>
-                  <strong>Region:</strong> {selectedStudent.region}
-                </p>
-                <p>
-                  <strong>Municipality:</strong> {selectedStudent.municipality}
-                </p>
-                <p>
-                  <strong>Mobile Number:</strong>{" "}
-                  {selectedStudent.mobile_number}
-                </p>
-                <p>
-                  <strong>Guardian Surname:</strong>{" "}
-                  {selectedStudent.guardian_surname}
-                </p>
-                <p>
-                  <strong>Guardian First Name:</strong>{" "}
-                  {selectedStudent.guardian_first_name}
-                </p>
-                <p>
-                  <strong>Relation with Student:</strong>{" "}
-                  {selectedStudent.relation_with_the_student}
-                </p>
-                <p>
-                  <strong>Guardian Mobile Number:</strong>{" "}
-                  {selectedStudent.guardian_mobile_number}
-                </p>
-                <p>
-                  <strong>Guardian Email:</strong>{" "}
-                  {selectedStudent.guardian_email}
-                </p>
-              </div>
-            )}
-
-            {/* Request Tab */}
-            {selectedStudent && activeTab !== "students" && (
-              <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
-                <p>
-                  <strong>Student ID:</strong> {selectedStudent.student_id}
-                </p>
-                <p>
-                  <strong>Student Name:</strong>{" "}
-                  {`${selectedStudent.first_name} ${
-                    selectedStudent.middle_name ?? ""
-                  } ${selectedStudent.surname}`}
-                </p>
-                <p>
-                  <strong>Program:</strong> {selectedStudent.program_name}
-                </p>
-                <p>
-                  <strong>Year Level:</strong> {selectedStudent.year_level}
-                </p>
-                <p>
-                  <strong>Request:</strong> {selectedStudent.request}
-                </p>
-                <p>
-                  <strong>Remarks:</strong>{" "}
-                  {selectedStudent.request_remarks ?? "—"}
-                </p>
-                <p>
-                  <strong>Purpose:</strong>{" "}
-                  {selectedStudent.request_purpose ?? "—"}
-                </p>
-                <p>
-                  <strong>Mode of Payment:</strong>{" "}
-                  {selectedStudent.mode_of_payment ?? "—"}
-                </p>
-                <p>
-                  <strong>Receipt:</strong>{" "}
-                  {selectedStudent.receipt ? (
-                    <Button
-                      variant="link"
-                      className="text-blue-600 underline"
-                      onClick={() =>
-                        handleViewReceipt(selectedStudent.receipt!)
-                      }
+      ) : (
+        <>
+          <div className="overflow-hidden rounded-md">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
                     >
-                      View Receipt
-                    </Button>
-                  ) : (
-                    "—"
-                  )}
-                </p>
-                {/* Receipt Dialog */}
-                <Dialog
-                  open={receiptDialogOpen}
-                  onOpenChange={setReceiptDialogOpen}
-                >
-                  <DialogContent className="max-w-5xl p-0 bg-black">
-                    <img
-                      src={receiptUrl || ""}
-                      alt="Receipt"
-                      className="w-full h-auto max-h-[90vh] object-contain"
-                    />
-                  </DialogContent>
-                </Dialog>
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      onClick={
+                        activeTab !== "students"
+                          ? () => setSelectedStudent(row.original)
+                          : undefined
+                      }
+                      className="cursor-pointer hover:bg-gray-100"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {activeTab === "students" ? (
+                            <Link
+                              to={`/nstsps/registrar/student-registrations/${row.original.student_id}-${row.original.user_id}`}
+                              key={row.id}
+                              state={{ user_id: row.original.user_id }}
+                              onClick={(e) => e.stopPropagation()} // prevent dialog open
+                              className="block w-full h-full"
+                            >
+                              {flexRender(cell.column.columnDef.cell, {
+                                ...cell.getContext(),
+                              })}
+                            </Link>
+                          ) : (
+                            flexRender(cell.column.columnDef.cell, {
+                              ...cell.getContext(),
+                              rowClickHandler: (e: React.MouseEvent) =>
+                                e.stopPropagation(),
+                            })
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="flex items-center justify-end space-x-2 py-4">
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
 
-                <p>
-                  <strong>Status:</strong> {selectedStudent.status}
-                </p>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </Dialog>
+          <Dialog
+            open={!!selectedStudent}
+            onOpenChange={() => setSelectedStudent(null)}
+          >
+            <Dialog
+              open={!!selectedStudent}
+              onOpenChange={() => setSelectedStudent(null)}
+            >
+              <DialogContent className="max-w-lg bg-white">
+                <DialogHeader>
+                  <DialogTitle className="text-center">
+                    {activeTab === "students"
+                      ? "Student Details"
+                      : "Request Details"}
+                  </DialogTitle>
+                </DialogHeader>
+
+                {/* Student Profile Tab */}
+                {selectedStudent && activeTab === "students" && (
+                  <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
+                    <p>
+                      <strong>Student ID:</strong> {selectedStudent.student_id}
+                    </p>
+                    <p>
+                      <strong>Surname:</strong> {selectedStudent.surname}
+                    </p>
+                    <p>
+                      <strong>First Name:</strong> {selectedStudent.first_name}
+                    </p>
+                    <p>
+                      <strong>Middle Name:</strong>{" "}
+                      {selectedStudent.middle_name ?? "—"}
+                    </p>
+                    <p>
+                      <strong>Gender:</strong> {selectedStudent.gender}
+                    </p>
+                    <p>
+                      <strong>Nationality:</strong>{" "}
+                      {selectedStudent.nationality}
+                    </p>
+                    <p>
+                      <strong>Civil Status:</strong>{" "}
+                      {selectedStudent.civil_status}
+                    </p>
+                    <p>
+                      <strong>Religion:</strong> {selectedStudent.religion}
+                    </p>
+                    <p>
+                      <strong>Birthday:</strong> {selectedStudent.birthday}
+                    </p>
+                    <p>
+                      <strong>Birthplace:</strong> {selectedStudent.birthplace}
+                    </p>
+                    <p>
+                      <strong>Street:</strong> {selectedStudent.street}
+                    </p>
+                    <p>
+                      <strong>Barangay:</strong> {selectedStudent.barangay}
+                    </p>
+                    <p>
+                      <strong>Region:</strong> {selectedStudent.region}
+                    </p>
+                    <p>
+                      <strong>Municipality:</strong>{" "}
+                      {selectedStudent.municipality}
+                    </p>
+                    <p>
+                      <strong>Mobile Number:</strong>{" "}
+                      {selectedStudent.mobile_number}
+                    </p>
+                    <p>
+                      <strong>Guardian Surname:</strong>{" "}
+                      {selectedStudent.guardian_surname}
+                    </p>
+                    <p>
+                      <strong>Guardian First Name:</strong>{" "}
+                      {selectedStudent.guardian_first_name}
+                    </p>
+                    <p>
+                      <strong>Relation with Student:</strong>{" "}
+                      {selectedStudent.relation_with_the_student}
+                    </p>
+                    <p>
+                      <strong>Guardian Mobile Number:</strong>{" "}
+                      {selectedStudent.guardian_mobile_number}
+                    </p>
+                    <p>
+                      <strong>Guardian Email:</strong>{" "}
+                      {selectedStudent.guardian_email}
+                    </p>
+                  </div>
+                )}
+
+                {/* Request Tab */}
+                {selectedStudent && activeTab !== "students" && (
+                  <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
+                    <p>
+                      <strong>Student ID:</strong> {selectedStudent.student_id}
+                    </p>
+                    <p>
+                      <strong>Student Name:</strong>{" "}
+                      {`${selectedStudent.first_name} ${
+                        selectedStudent.middle_name ?? ""
+                      } ${selectedStudent.surname}`}
+                    </p>
+                    <p>
+                      <strong>Program:</strong> {selectedStudent.program_name}
+                    </p>
+                    <p>
+                      <strong>Year Level:</strong> {selectedStudent.year_level}
+                    </p>
+                    <p>
+                      <strong>Request:</strong> {selectedStudent.request}
+                    </p>
+                    <p>
+                      <strong>Remarks:</strong>{" "}
+                      {selectedStudent.request_remarks ?? "—"}
+                    </p>
+                    <p>
+                      <strong>Purpose:</strong>{" "}
+                      {selectedStudent.request_purpose ?? "—"}
+                    </p>
+                    <p>
+                      <strong>Mode of Payment:</strong>{" "}
+                      {selectedStudent.mode_of_payment ?? "—"}
+                    </p>
+                    <p>
+                      <strong>Receipt:</strong>{" "}
+                      {selectedStudent.receipt ? (
+                        <Button
+                          variant="link"
+                          className="text-blue-600 underline"
+                          onClick={() =>
+                            handleViewReceipt(selectedStudent.receipt!)
+                          }
+                        >
+                          View Receipt
+                        </Button>
+                      ) : (
+                        "—"
+                      )}
+                    </p>
+                    {/* Receipt Dialog */}
+                    <Dialog
+                      open={receiptDialogOpen}
+                      onOpenChange={setReceiptDialogOpen}
+                    >
+                      <DialogContent className="max-w-5xl p-0 bg-black">
+                        <img
+                          src={receiptUrl || ""}
+                          alt="Receipt"
+                          className="w-full h-auto max-h-[90vh] object-contain"
+                        />
+                      </DialogContent>
+                    </Dialog>
+
+                    <p>
+                      <strong>Status:</strong> {selectedStudent.status}
+                    </p>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }

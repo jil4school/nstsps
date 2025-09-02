@@ -13,6 +13,8 @@ type Course = {
   course_description: string;
   course_code: string;
   unit: number;
+  year_level: string; // add this
+  sem: string; // add this
 };
 
 interface ProgramContextType {
@@ -22,6 +24,7 @@ interface ProgramContextType {
   fetchProgramCourses: (programId: string) => Promise<void>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
+  fetchGroupedProgramCourses: (programId: string) => Promise<void>; // ✅ new
 }
 
 const ProgramContext = createContext<ProgramContextType | undefined>(undefined);
@@ -76,6 +79,34 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // inside ProgramProvider
+  const fetchGroupedProgramCourses = async (
+    programId: string
+  ): Promise<void> => {
+    try {
+      const response = await axios.get(
+        `http://localhost/NSTSPS_API/controller/ProgramCoursessController.php?program_id=${programId}`
+      );
+
+      if (Array.isArray(response.data)) {
+        setProgramCourses(response.data); // this will now contain the joined course info
+        setError(null);
+        console.log("Fetched grouped courses:", response.data);
+      } else {
+        setProgramCourses([]);
+        toast.error("Failed to fetch grouped program courses.");
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Grouped courses request failed";
+      setError(message);
+      setProgramCourses([]);
+      toast.error(message);
+    }
+  };
+
   const value: ProgramContextType = {
     programs,
     programCourses, // ✅ Expose it
@@ -83,12 +114,11 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
     fetchProgramCourses,
     error,
     setError,
+    fetchGroupedProgramCourses,
   };
 
   return (
-    <ProgramContext.Provider value={value}>
-      {children}
-    </ProgramContext.Provider>
+    <ProgramContext.Provider value={value}>{children}</ProgramContext.Provider>
   );
 };
 
