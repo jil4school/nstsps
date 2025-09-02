@@ -13,7 +13,11 @@ import NewStudentBatch from "./new-student-form-batch";
 import ITHome from "./it-admin";
 import EmailBatch from "./email-batch";
 import RegistrarHome from "./registrar-admin";
-import StudentRegistrationsContent, { StudentRegistrations } from "./student-registrations";
+import StudentRegistrationsContent, {
+  StudentRegistrations,
+} from "./student-registrations";
+import StudentRegistrationBatch from "./student-registration-batch";
+import { AdminRegistrationProvider } from "./context/admin-registration-context";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -55,6 +59,14 @@ const routes = [
   {
     path: "/nstsps/registrar/student-registrations/:combinedId",
     element: <StudentRegistrations />, // <-- wrapper na may useParams
+  },
+  {
+    path: "/nstsps/registrar/student-registration",
+    element: (
+      <AdminRegistrationProvider userId="">
+        <StudentRegistrationBatch />
+      </AdminRegistrationProvider>
+    ),
   },
 ];
 

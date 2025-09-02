@@ -316,6 +316,7 @@ export function StudentTableRegistrar() {
     if (activeTab === "students") {
       return [...baseColumns, actionsColumn(activeTab)];
     }
+
     return [...baseColumns, ...extraColumns, actionsColumn(activeTab)];
   }, [activeTab]);
 
@@ -451,13 +452,21 @@ export function StudentTableRegistrar() {
       </div>
 
       {/* Search bar */}
-      <div className="flex items-center py-4 w-full">
+      <div className="flex items-center justify-between py-4 w-full">
         <Input
           placeholder="Search..."
           value={globalFilter ?? ""}
           onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
+
+        {activeTab === "students" && (
+          <Link to="/nstsps/registrar/student-registration">
+            <Button className="bg-blue-600 text-white hover:bg-blue-700">
+              Upload Registrations
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-md">

@@ -39,10 +39,15 @@ type RegistrationContextType = {
     registrationId: string,
     masterFileId: string,
     userId: string,
-    courses: { reg_courses_id: number; course_id: number }[] // ✅ match here
+    courses: { reg_courses_id: number; course_id: number }[],
+    deleted?: number[]
+  ) => Promise<boolean>;
+
+  // ✅ new function
+  insertMultipleRegistrations: (
+    registrations: Registration[]
   ) => Promise<boolean>;
 };
-
 
 const AdminRegistrationContext = createContext<RegistrationContextType>({
   registrations: [],
@@ -50,14 +55,9 @@ const AdminRegistrationContext = createContext<RegistrationContextType>({
   error: null,
   getRegistrationById: async () => null,
   getRequestByRegistrationId: async () => null,
-  updateRegistration: async (
-    _registrationId: string,
-    _masterFileId: string,
-    _userId: string,
-    _courses: { reg_courses_id: number; course_id: number }[]
-  ) => false,
+  updateRegistration: async () => false,
+  insertMultipleRegistrations: async () => false
 });
-
 
 export const AdminRegistrationProvider: React.FC<{
   children: React.ReactNode;
@@ -139,7 +139,7 @@ export const AdminRegistrationProvider: React.FC<{
         course_codes: item.course_codes || [],
         course_descriptions: item.course_descriptions || [],
         units: item.units || [],
-         reg_courses_id: item.reg_courses_id || [], // ✅ include this
+        reg_courses_id: item.reg_courses_id || [], // ✅ include this
       };
     } catch (err) {
       toast.error(
@@ -168,38 +168,67 @@ export const AdminRegistrationProvider: React.FC<{
   };
 
   const updateRegistration = async (
-  registrationId: string,
-  masterFileId: string,
-  userId: string,
-  courses: { reg_courses_id: number; course_id: number }[]
-): Promise<boolean> => {
-  try {
-    const response = await axios.post(
-      "http://localhost/NSTSPS_API/controller/RegistrationController.php",
-      {
-        registration_id: registrationId,
-        master_file_id: masterFileId,
-        user_id: userId,
-        courses, // ✅ include reg_courses_id
+    registrationId: string,
+    masterFileId: string,
+    userId: string,
+    courses: { reg_courses_id: number; course_id: number }[],
+    deleted: number[] = [] // add this param
+  ): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/RegistrationController.php",
+        {
+          registration_id: registrationId,
+          master_file_id: masterFileId,
+          user_id: userId,
+          courses,
+          deleted, // send deleted IDs
+        }
+      );
+      if (response.data.success) {
+        toast.success("Registration updated successfully!");
+        await fetchRegistrationData(userId);
+        return true;
+      } else {
+        console.log("Update response:", response.data); // 🔹 log for debugging
+        toast.error(response.data.error || "Failed to update registration");
+        return false;
       }
-    );
-
-    if (response.data.success) {
-      toast.success("Registration updated successfully!");
-      await fetchRegistrationData(userId);
-      return true;
-    } else {
-      console.log("Update response:", response.data); // 🔹 log for debugging
-      toast.error(response.data.error || "Failed to update registration");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error updating registration");
       return false;
     }
-  } catch (err) {
-    console.error(err);
-    toast.error("Error updating registration");
-    return false;
-  }
-};
+  };
 
+  const insertMultipleRegistrations = async (
+    registrations: any[]
+  ): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/RegistrationController.php",
+        { action: "batch_insert", registrations },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data && response.data.success) {
+        toast.success("Registrations inserted successfully!");
+        return true;
+      } else {
+        setError(response.data.error || "Failed to insert registrations");
+        toast.error("Batch insert failed");
+        return false;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Batch registration insert failed";
+      setError(message);
+      toast.error(message);
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (userId) {
@@ -214,6 +243,7 @@ export const AdminRegistrationProvider: React.FC<{
         registrations,
         loading,
         error,
+        insertMultipleRegistrations,
         getRegistrationById,
         getRequestByRegistrationId,
         updateRegistration, // ✅ added

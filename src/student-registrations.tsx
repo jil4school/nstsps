@@ -16,6 +16,16 @@ import { useParams } from "react-router-dom";
 import HeaderAdmin from "./header-admin";
 import { useProgram } from "@/context/miscellaneous-context";
 import { toast } from "sonner";
+import { Trash2, Plus } from "lucide-react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./components/ui/dialog";
 
 // StudentRegistrations.tsx
 
@@ -37,8 +47,13 @@ export default function StudentRegistrationsContent({
   student_id: string;
   user_id: string;
 }) {
-  console.log("Student ID:", student_id);
-  console.log("User ID:", user_id);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    index: number | null;
+    courseIndex: number | null;
+  }>({ open: false, index: null, courseIndex: null });
+
+  const [removedRegCourseIds, setRemovedRegCourseIds] = useState<number[]>([]);
 
   const { programCourses, fetchProgramCourses } = useProgram();
   const {
@@ -173,17 +188,19 @@ export default function StudentRegistrationsContent({
                           <Table className="w-full table-fixed mb-5">
                             <TableHeader>
                               <TableRow className="bg-gray-100">
-                                <TableHead className="w-1/3">Code</TableHead>
-                                <TableHead className="w-1/3">Course</TableHead>
-                                <TableHead className="w-1/3">Unit</TableHead>
+                                <TableHead className="w-1/4">Code</TableHead>
+                                <TableHead className="w-1/2">Course</TableHead>
+                                <TableHead className="w-1/6">Unit</TableHead>
+                                <TableHead className="w-1/12"></TableHead>
                               </TableRow>
                             </TableHeader>
+
                             <TableBody>
                               {(courseData[index]?.codes || []).map(
                                 (code, i) => (
                                   <TableRow key={i}>
-                                    {/* CODE (non-editable) */}
-                                    <TableCell className="w-1/3">
+                                    {/* CODE */}
+                                    <TableCell className="w-1/4">
                                       <input
                                         type="text"
                                         value={
@@ -194,8 +211,8 @@ export default function StudentRegistrationsContent({
                                       />
                                     </TableCell>
 
-                                    {/* COURSE DESCRIPTION (editable dropdown) */}
-                                    <TableCell className="w-1/3">
+                                    {/* DESCRIPTION */}
+                                    <TableCell className="w-1/2">
                                       <select
                                         value={
                                           courseData[index]?.descriptions?.[
@@ -255,8 +272,8 @@ export default function StudentRegistrationsContent({
                                       </select>
                                     </TableCell>
 
-                                    {/* UNITS (non-editable) */}
-                                    <TableCell className="w-1/3">
+                                    {/* UNITS */}
+                                    <TableCell className="w-1/6">
                                       <input
                                         type="number"
                                         value={
@@ -266,9 +283,196 @@ export default function StudentRegistrationsContent({
                                         className="w-full p-1 text-gray-600 cursor-not-allowed"
                                       />
                                     </TableCell>
+
+                                    {/* REMOVE BUTTON */}
+                                    <TableCell className="w-1/12">
+                                      <button
+                                        onClick={() =>
+                                          setDeleteDialog({
+                                            open: true,
+                                            index,
+                                            courseIndex: i,
+                                          })
+                                        }
+                                        className="text-red-600 hover:text-red-800 p-1"
+                                        title="Remove Course"
+                                      >
+                                        <Trash2 size={18} />
+                                      </button>
+                                      <Dialog
+                                        open={deleteDialog.open}
+                                        onOpenChange={(open) =>
+                                          setDeleteDialog({
+                                            open,
+                                            index: null,
+                                            courseIndex: null,
+                                          })
+                                        }
+                                      >
+                                        <DialogContent>
+                                          <DialogHeader>
+                                            <DialogTitle>
+                                              Remove Course
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                              Are you sure you want to remove
+                                              this course? This action cannot be
+                                              undone.
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <DialogFooter>
+                                            <button
+                                              className="px-4 py-2 bg-gray-300 rounded"
+                                              onClick={() =>
+                                                setDeleteDialog({
+                                                  open: false,
+                                                  index: null,
+                                                  courseIndex: null,
+                                                })
+                                              }
+                                            >
+                                              Cancel
+                                            </button>
+                                            <button
+                                              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                              onClick={() => {
+                                                if (
+                                                  deleteDialog.index !== null &&
+                                                  deleteDialog.courseIndex !==
+                                                    null
+                                                ) {
+                                                  const regIdToRemove =
+                                                    courseData[
+                                                      deleteDialog.index
+                                                    ]?.reg_courses_id?.[
+                                                      deleteDialog.courseIndex
+                                                    ];
+
+                                                  if (regIdToRemove) {
+                                                    setRemovedRegCourseIds(
+                                                      (prev) => [
+                                                        ...prev,
+                                                        regIdToRemove,
+                                                      ]
+                                                    );
+                                                  }
+
+                                                  setCourseData((prev) => {
+                                                    if (
+                                                      deleteDialog.index ===
+                                                      null
+                                                    ) {
+                                                      return prev;
+                                                    }
+                                                    const newCodes = [
+                                                      ...(prev[
+                                                        deleteDialog.index
+                                                      ]?.codes || []),
+                                                    ];
+                                                    const newDescriptions = [
+                                                      ...(prev[
+                                                        deleteDialog.index
+                                                      ]?.descriptions || []),
+                                                    ];
+                                                    const newUnits = [
+                                                      ...(prev[
+                                                        deleteDialog.index
+                                                      ]?.units || []),
+                                                    ];
+                                                    const newRegIds = [
+                                                      ...(prev[
+                                                        deleteDialog.index
+                                                      ]?.reg_courses_id || []),
+                                                    ];
+
+                                                    newCodes.splice(
+                                                      deleteDialog.courseIndex!,
+                                                      1
+                                                    );
+                                                    newDescriptions.splice(
+                                                      deleteDialog.courseIndex!,
+                                                      1
+                                                    );
+                                                    newUnits.splice(
+                                                      deleteDialog.courseIndex!,
+                                                      1
+                                                    );
+                                                    newRegIds.splice(
+                                                      deleteDialog.courseIndex!,
+                                                      1
+                                                    );
+
+                                                    return {
+                                                      ...prev,
+                                                      [deleteDialog.index]: {
+                                                        ...prev[
+                                                          deleteDialog.index
+                                                        ],
+                                                        codes: newCodes,
+                                                        descriptions:
+                                                          newDescriptions,
+                                                        units: newUnits,
+                                                        reg_courses_id:
+                                                          newRegIds,
+                                                      },
+                                                    };
+                                                  });
+
+                                                  setDeleteDialog({
+                                                    open: false,
+                                                    index: null,
+                                                    courseIndex: null,
+                                                  });
+                                                }
+                                              }}
+                                            >
+                                              Remove
+                                            </button>
+                                          </DialogFooter>
+                                        </DialogContent>
+                                      </Dialog>
+                                    </TableCell>
                                   </TableRow>
                                 )
                               )}
+                              {/* ✅ Add row at the bottom */}
+                              <TableRow className="bg-gray-50 hover:bg-gray-100">
+                                <TableCell colSpan={4} className="p-2">
+                                  <div className="flex items-center justify-center">
+                                    <button
+                                      onClick={() => {
+                                        setCourseData((prev) => ({
+                                          ...prev,
+                                          [index]: {
+                                            codes: [
+                                              ...(prev[index]?.codes || []),
+                                              "",
+                                            ],
+                                            descriptions: [
+                                              ...(prev[index]?.descriptions ||
+                                                []),
+                                              "",
+                                            ],
+                                            units: [
+                                              ...(prev[index]?.units || []),
+                                              0,
+                                            ],
+                                            reg_courses_id: [
+                                              ...(prev[index]?.reg_courses_id ||
+                                                []),
+                                              null,
+                                            ],
+                                          },
+                                        }));
+                                      }}
+                                      className="flex items-center gap-1 text-green-600 hover:text-green-800 font-medium"
+                                    >
+                                      <Plus size={18} />
+                                      <span>Add</span>
+                                    </button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
                             </TableBody>
                           </Table>
                           <div className="flex justify-between items-center mt-3">
@@ -285,7 +489,7 @@ export default function StudentRegistrationsContent({
                                 ).map((_, i) => ({
                                   reg_courses_id: Number(
                                     courseData[index].reg_courses_id?.[i]
-                                  ), // ✅ backend ID
+                                  ),
                                   course_id: Number(
                                     programCourses.find(
                                       (c) =>
@@ -300,11 +504,13 @@ export default function StudentRegistrationsContent({
                                   registrations[index].registration_id,
                                   registrations[index].master_file_id,
                                   user_id,
-                                  payload
+                                  payload,
+                                  removedRegCourseIds // 🔴 send deleted IDs
                                 );
 
                                 if (success) {
                                   toast.success("Registration updated!");
+                                  setRemovedRegCourseIds([]); // reset after save
                                 }
                               }}
                               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded"
