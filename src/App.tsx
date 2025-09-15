@@ -18,6 +18,7 @@ import StudentRegistrationsContent, {
 } from "./student-registrations";
 import StudentRegistrationBatch from "./student-registration-batch";
 import { AdminRegistrationProvider } from "./context/admin-registration-context";
+import AccountingHome from "./accounting-admin";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -68,6 +69,7 @@ const routes = [
       </AdminRegistrationProvider>
     ),
   },
+   { path: "/nstsps/accounting-home", element: <AccountingHome /> },
 ];
 
 function App() {

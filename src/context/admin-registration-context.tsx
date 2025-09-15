@@ -213,7 +213,9 @@ export const AdminRegistrationProvider: React.FC<{
 
       if (response.data && response.data.success) {
         toast.success("Registrations inserted successfully!");
-        return true;
+        console.log(response.data); // ✅ cleaner, only your backend payload
+
+               return true;
       } else {
         setError(response.data.error || "Failed to insert registrations");
         toast.error("Batch insert failed");

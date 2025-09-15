@@ -45,6 +45,13 @@ import { useMasterFile } from "@/context/master-file-context";
 import { useRequest } from "./context/request-context";
 import { Link } from "react-router-dom";
 import { useProgram } from "./context/miscellaneous-context";
+import {
+  Select,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./components/ui/select";
+import { SelectContent } from "@radix-ui/react-select";
 
 export type StudentInfo = {
   user_id: string;
@@ -491,10 +498,10 @@ export function StudentTableRegistrar() {
   ];
 
   React.useEffect(() => {
-    if (activeTab === "courses") {
-      fetchPrograms();
+    if (activeTab === "courses" && selectedProgram) {
+      fetchGroupedProgramCourses(selectedProgram);
     }
-  }, [activeTab, fetchPrograms]);
+  }, [activeTab, selectedProgram]);
 
   React.useEffect(() => {
     if (selectedProgram) {
@@ -502,12 +509,11 @@ export function StudentTableRegistrar() {
     }
   }, [selectedProgram]);
   // Inside StudentTableRegistrar
-React.useEffect(() => {
-  if (activeTab === "courses" && programs.length > 0 && !selectedProgram) {
-    setSelectedProgram(programs[0].program_id); // select the first program
-  }
-}, [activeTab, programs, selectedProgram]);
-
+  React.useEffect(() => {
+    if (activeTab === "courses" && programs.length > 0 && !selectedProgram) {
+      setSelectedProgram(programs[0].program_id);
+    }
+  }, [activeTab, programs]);
 
   return (
     <div className="w-full">
@@ -537,21 +543,26 @@ React.useEffect(() => {
       {/* Search bar */}
       <div className="flex items-center justify-between py-4 w-full">
         {activeTab === "courses" ? (
-          <select
+          <Select
             value={selectedProgram}
-            onChange={(e) => {
-              setSelectedProgram(e.target.value);
-              console.log("Selected Program ID:", e.target.value);
-            }}
-            className="border rounded p-2"
+            onValueChange={(value) => setSelectedProgram(value)}
           >
-            <option value="">Select Program</option>
-            {programs.map((program) => (
-              <option key={program.program_id} value={program.program_id}>
-                {program.program_name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="min-w-[150px] px-4 py-2 rounded-md shadow-sm border bg-white text-gray-700 hover:border-primary focus:ring-2 focus:ring-primary transition-all duration-200 w-auto">
+              <SelectValue placeholder="Select Program" />
+            </SelectTrigger>
+
+            <SelectContent className="rounded-sm shadow-lg bg-white max-h-[250px] overflow-y-auto">
+              {programs.map((program) => (
+                <SelectItem
+                  key={program.program_id}
+                  value={program.program_id}
+                  className="py-2 px-4 cursor-pointer hover:bg-primary/10 rounded-lg transition-colors duration-150"
+                >
+                  {program.program_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : (
           <Input
             placeholder="Search..."
@@ -570,14 +581,14 @@ React.useEffect(() => {
         )}
       </div>
       {activeTab === "courses" ? (
-        <div className="space-y-8">
+        <div className="space-y-8 mb-5">
           {["1st Year", "2nd Year", "3rd Year", "4th Year"].map((year) => (
             <div key={year}>
               <h2 className="text-lg font-semibold">{year}</h2>
               <hr className="my-2 border-gray-300" />
 
               <div className="grid grid-cols-2 gap-8">
-                {["First Sem", "Second Sem"].map((sem) => {
+                {["First Semester", "Second Semester"].map((sem) => {
                   const groupCourses: CourseInfo[] = programCourses
                     .filter((c) => c.year_level === year && c.sem === sem)
                     .map((c) => ({
@@ -615,17 +626,35 @@ React.useEffect(() => {
 
                         <TableBody>
                           {groupCourses.length ? (
-                            groupCourses.map((course) => (
-                              <TableRow key={course.course_id}>
-                                <TableCell>
-                                  {course.course_code ?? "—"}
+                            <>
+                              {groupCourses.map((course) => (
+                                <TableRow key={course.course_id}>
+                                  <TableCell>
+                                    {course.course_code ?? "—"}
+                                  </TableCell>
+                                  <TableCell>
+                                    {course.course_description ?? "—"}
+                                  </TableCell>
+                                  <TableCell>{course.unit ?? "—"}</TableCell>
+                                </TableRow>
+                              ))}
+
+                              {/* Total row */}
+                              <TableRow className="font-semibold bg-gray-100">
+                                <TableCell
+                                  colSpan={2}
+                                  className="text-right pr-4"
+                                >
+                                  Total Units
                                 </TableCell>
                                 <TableCell>
-                                  {course.course_description ?? "—"}
+                                  {groupCourses.reduce(
+                                    (sum, c) => sum + (c.unit || 0),
+                                    0
+                                  )}
                                 </TableCell>
-                                <TableCell>{course.unit ?? "—"}</TableCell>
                               </TableRow>
-                            ))
+                            </>
                           ) : (
                             <TableRow>
                               <TableCell
