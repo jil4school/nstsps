@@ -6,7 +6,8 @@ import { useAdminRegistrationContext } from "./context/admin-registration-contex
 
 const downloadTemplate = () => {
   const link = document.createElement("a");
-  link.href = "http://localhost/NSTSPS_API/template/StudentBatchRegistration.xlsx";
+  link.href =
+    "http://localhost/NSTSPS_API/template/BatchRegistration.xlsx";
   link.setAttribute("download", "StudentRegistration.xlsx");
   document.body.appendChild(link);
   link.click();
@@ -24,6 +25,7 @@ export default function StudentRegistrationBatch() {
     "school year": "school_year",
     "year level": "year_level",
     semester: "sem",
+    "amount paid": "amount_paid", // 👈 NEW COLUMN
   };
 
   const mapRowToBackend = (row: any) => {
@@ -220,16 +222,23 @@ export default function StudentRegistrationBatch() {
               <table className="min-w-full border-collapse table-auto">
                 <thead className="bg-gray-100">
                   <tr>
-                    {Object.keys(data[0]).map((header, idx) => (
-                      <th
-                        key={idx}
-                        className="px-4 py-2 text-left text-sm font-semibold border"
-                      >
-                        {header}
-                      </th>
-                    ))}
+                    {Object.keys(data[0]).map((header, idx) => {
+                      let displayHeader = header;
+                      if (header.toLowerCase() === "amount paid") {
+                        displayHeader = "Amount Paid"; // 👈 consistent label
+                      }
+                      return (
+                        <th
+                          key={idx}
+                          className="px-4 py-2 text-left text-sm font-semibold border"
+                        >
+                          {displayHeader}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
+
                 <tbody>
                   {data.map((row, rowIndex) => (
                     <tr key={rowIndex} className="hover:bg-gray-50">
