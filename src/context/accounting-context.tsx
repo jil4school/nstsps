@@ -10,58 +10,130 @@ interface Accounting {
   school_year: string;
   sem: string;
 }
+
+export type AccountingRecord = {
+  balance_id: number;        // unique id for the accounting/balance row
+  tuition_id?: number;
+  student_id: string;
+  surname: string;
+  first_name: string;
+  middle_name?: string | null;
+  program_name?: string | null;
+  year_level?: string | null;
+  sem?: string | null;
+  balance: number;
+  amount_paid: number;
+  status?: string | null;    // optional, blank for now
+};
+
 interface AccountingContextType {
   accountingRecord: Accounting | null;
   fetchAccounting: (user_id: string | number) => Promise<void>;
+  fetchAllAccounting: () => Promise<AccountingRecord[]>;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
+  updateBalance: (
+    balance_id: number | string,
+    amount_paid: number
+  ) => Promise<boolean>;
 }
 
-const AccountingContext = createContext<AccountingContextType | undefined>(undefined);
+const AccountingContext = createContext<AccountingContextType | undefined>(
+  undefined
+);
 
 export const AccountingProvider = ({ children }: { children: ReactNode }) => {
   const { user, setUser } = useLogin();
-  
+
   const logout = () => {
     setUser(null);
   };
-  const [accountingRecord, setAccountingRecord] = useState<Accounting | null>(null);
+  const [accountingRecord, setAccountingRecord] = useState<Accounting | null>(
+    null
+  );
 
   const [error, setError] = useState<string | null>(null);
 
   const fetchAccounting = async (user_id: string | number): Promise<void> => {
-  try {
-    const response = await axios.get(
-      `http://localhost/NSTSPS_API/controller/AccountingController.php`,
-      { params: { user_id } }
-    );
+    try {
+      const response = await axios.get(
+        `http://localhost/NSTSPS_API/controller/AccountingController.php`,
+        { params: { user_id } }
+      );
 
-    if (Array.isArray(response.data) && response.data.length > 0) {
-      setAccountingRecord(response.data[0]);
-    } else {
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setAccountingRecord(response.data[0]);
+      } else {
+        setAccountingRecord(null);
+        setError("No accounting record found.");
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Accounting request failed";
+      setError(message);
       setAccountingRecord(null);
-      setError("No accounting record found.");
-      
     }
-  } catch (err: any) {
-    const message = err.response?.data?.error ?? err.message ?? "Accounting request failed";
-    setError(message);
-    setAccountingRecord(null);
-  }
-};
+  };
 
- useEffect(() => {
-  if (user?.user_id) {
-    fetchAccounting(user?.user_id);
-  }
-}, [user]);
+  const fetchAllAccounting = async (): Promise<AccountingRecord[]> => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/AccountingController.php"
+      );
 
+      if (Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        return [];
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Failed to fetch all accounting records";
+      setError(message);
+      return [];
+    }
+  };
+  const updateBalance = async (
+    balance_id: number | string,
+    amount_paid: number
+  ): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/AccountingController.php",
+        { action: "update_balance", balance_id, amount_paid },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data && response.data.success) {
+        // success
+        return true;
+      } else {
+        setError(response.data?.error || "Failed to update balance");
+        return false;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Update balance failed";
+      setError(message);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (user?.user_id) {
+      fetchAccounting(user?.user_id);
+    }
+  }, [user]);
 
   const value: AccountingContextType = {
     accountingRecord,
     fetchAccounting,
+    fetchAllAccounting,
     error,
     setError,
+    updateBalance,
   };
 
   return (

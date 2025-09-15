@@ -14,6 +14,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,9 +35,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useMasterFile } from "@/context/master-file-context";
+import { useAccounting } from "@/context/accounting-context";
+
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./components/ui/dialog";
+import { Label } from "./components/ui/label";
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 
 export type StudentInfo = {
   user_id: string;
@@ -73,7 +86,82 @@ const downloadPendingEmailsExcel = (pendingStudents: StudentInfo[]) => {
   XLSX.writeFile(wb, "PendingEmails.xlsx");
 };
 
-export const columns: ColumnDef<StudentInfo>[] = [
+export function ManageBalanceButton({ record }: { record: AccountingRecord }) {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const { updateBalance } = useAccounting();
+
+  const handleSubmit = async () => {
+    if (!amount || isNaN(Number(amount))) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    const amt = Number(amount);
+    const success = await updateBalance(record.balance_id, amt);
+    if (success) {
+      toast.success("Payment recorded");
+      // notify other components to refresh
+      window.dispatchEvent(new Event("accountingUpdated"));
+      setOpen(false);
+      setAmount("");
+    } else {
+      toast.error("Failed to update balance");
+    }
+  };
+
+  return (
+    <>
+      <Button
+        size="sm"
+        onClick={() => setOpen(true)}
+        className="bg-[#1BB2EF] hover:bg-[#1599cc] text-white"
+      >
+        Manage Balance
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle>Update Balance — {record.student_id}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Label>Amount Paid</Label>
+            <Input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Enter amount paid"
+            />
+            <div className="text-sm text-gray-600">
+              Current paid: ₱{Number(record.amount_paid ?? 0).toLocaleString()}{" "}
+              · Balance: ₱{Number(record.balance ?? 0).toLocaleString()}
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            {/* Cancel Button */}
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Cancel
+            </Button>
+
+            {/* Submit Button */}
+            <Button
+              onClick={handleSubmit}
+              className="bg-[#1BB2EF] hover:bg-[#1599cc] text-white"
+            >
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+export const columns: ColumnDef<AccountingRecord>[] = [
   {
     id: "full_name",
     header: () => <div className="text-left">Name</div>,
@@ -85,62 +173,89 @@ export const columns: ColumnDef<StudentInfo>[] = [
         </div>
       );
     },
-    sortingFn: (a, b) => {
-      const aName = `${a.original.surname} ${a.original.first_name} ${
-        a.original.middle_name ?? ""
-      }`;
-      const bName = `${b.original.surname} ${b.original.first_name} ${
-        b.original.middle_name ?? ""
-      }`;
-      return aName.localeCompare(bName);
-    },
   },
   {
-    accessorKey: "email",
-    header: () => <div className="text-left">Email</div>,
-    cell: ({ row }) => <div className="text-left">{row.getValue("email")}</div>,
+    accessorKey: "student_id",
+    header: () => <div className="text-left">Student ID</div>,
   },
   {
     accessorKey: "program_name",
     header: () => <div className="text-left">Program</div>,
+  },
+  {
+    accessorKey: "school_year",
+    header: () => <div className="text-left">School Year</div>,
+  },
+  {
+    accessorKey: "year_level",
+    header: () => <div className="text-left">Year</div>,
+  },
+  {
+    accessorKey: "sem",
+    header: () => <div className="text-left">Semester</div>,
+  },
+  {
+    accessorKey: "balance",
+    header: () => <div className="text-right">Balance</div>,
     cell: ({ row }) => (
-      <div className="text-left">{row.getValue("program_name")}</div>
+      <div className="text-right">
+        ₱{Number(row.getValue("balance")).toLocaleString()}
+      </div>
     ),
   },
   {
-    id: "actions",
-    enableHiding: false,
+    accessorKey: "status",
+    header: () => <div className="text-left">Status</div>,
     cell: ({ row }) => {
-      const student = row.original;
+      const balance = Number(row.original.balance);
+
+      const isFullyPaid = balance === 0;
+
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(student.student_id)}
-            >
-              Copy Student ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View Profile</DropdownMenuItem>
-            <DropdownMenuItem>Edit Details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <span
+          className={cn(
+            "px-2 py-1 rounded-md text-xs font-medium",
+            isFullyPaid
+              ? "bg-[#3BF157] text-white" // Fully Paid
+              : "bg-[#EEF391] text-gray-800" // Pending
+          )}
+        >
+          {isFullyPaid ? "Fully Paid" : "Pending"}
+        </span>
       );
     },
   },
+  {
+    id: "actions",
+    header: () => <div className="text-left">Actions</div>,
+    cell: ({ row }) => {
+      const student = row.original;
+      return <ManageBalanceButton record={student} />;
+    },
+  },
 ];
+
 type TableProps = {
-  data: StudentInfo[];
+  data: AccountingRecord[];
   loading: boolean;
   globalFilter: string;
   setGlobalFilter: (val: string) => void;
+};
+
+export type AccountingRecord = {
+  balance_id: number; // important — primary for updates
+  tuition_id?: number;
+  student_id: string;
+  surname: string;
+  first_name: string;
+  middle_name?: string;
+  program_name: string;
+  year_level: string;
+  school_year: string;
+  sem: string;
+  balance: number;
+  amount_paid: number;
+  status?: string; // blank
 };
 
 export function StudentTableContent({
@@ -292,54 +407,41 @@ export function StudentTableContent({
 }
 
 export function StudentTableAccounting() {
-  const { fetchAllStudents, fetchPendingEmails, fetchCreatedEmails } =
-    useMasterFile();
+  const { fetchAllAccounting } = useAccounting();
 
-  const [allStudents, setAllStudents] = React.useState<StudentInfo[]>([]);
-  const [pendingStudents, setPendingStudents] = React.useState<StudentInfo[]>(
-    []
-  );
-  const [createdStudents, setCreatedStudents] = React.useState<StudentInfo[]>(
-    []
-  );
+  const [records, setRecords] = React.useState<AccountingRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [activeTab, setActiveTab] = React.useState<"all" | "pending">("all");
 
-  const [activeTab, setActiveTab] = React.useState<
-    "all" | "pending" | "created"
-  >("all");
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    const data = await fetchAllAccounting();
+    setRecords(data);
+    setLoading(false);
+  }, [fetchAllAccounting]);
 
   React.useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const [all, pending, created] = await Promise.all([
-        fetchAllStudents(),
-        fetchPendingEmails(),
-        fetchCreatedEmails(),
-      ]);
-      if (all) setAllStudents(all);
-      if (pending) setPendingStudents(pending);
-      if (created) setCreatedStudents(created);
-      setLoading(false);
-    };
     load();
-  }, [fetchAllStudents, fetchPendingEmails, fetchCreatedEmails]);
-  const [globalFilter, setGlobalFilter] = React.useState("");
+
+    const handler = () => load();
+    window.addEventListener("accountingUpdated", handler);
+    return () => window.removeEventListener("accountingUpdated", handler);
+  }, [load]);
+
+  // ✅ filter pending
+  const pendingRecords = records.filter((rec) => Number(rec.balance) !== 0);
 
   return (
     <div className="w-full">
       {/* Tabs */}
       <div className="flex space-x-4 mb-4 text-sm font-medium">
-        {["All", "Pending Emails", "Emails Created"].map((tab) => {
-          const value =
-            tab === "All"
-              ? "all"
-              : tab === "Pending Emails"
-              ? "pending"
-              : "created";
+        {["All", "Pending"].map((tab) => {
+          const value = tab.toLowerCase() as "all" | "pending";
           return (
             <button
               key={tab}
-              onClick={() => setActiveTab(value as any)}
+              onClick={() => setActiveTab(value)}
               className={`pb-2 ${
                 activeTab === value
                   ? "border-b-2 border-black"
@@ -352,34 +454,21 @@ export function StudentTableAccounting() {
         })}
       </div>
 
-      {/* Search bar (always visible) */}
       <div className="flex items-center py-4 w-full">
         <Input
-          placeholder="Search students..."
+          placeholder={`Search ${
+            activeTab === "all" ? "records" : "pending records"
+          }...`}
           className="max-w-sm"
           value={globalFilter ?? ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
         />
-
-        {activeTab === "pending" && (
-          <div className="ml-auto flex gap-2">
-            <Button
-              className="bg-green-600 text-white"
-              onClick={() => downloadPendingEmailsExcel(pendingStudents)}
-            >
-              Download Pending Emails
-            </Button>
-            <Link to="/nstsps/IT/email-batch">
-              <Button className="bg-[#00ACED] text-white">Upload Emails</Button>
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* Tab content */}
       {activeTab === "all" && (
         <StudentTableContent
-          data={allStudents}
+          data={records}
           loading={loading}
           globalFilter={globalFilter}
           setGlobalFilter={setGlobalFilter}
@@ -387,15 +476,7 @@ export function StudentTableAccounting() {
       )}
       {activeTab === "pending" && (
         <StudentTableContent
-          data={pendingStudents}
-          loading={loading}
-          globalFilter={globalFilter}
-          setGlobalFilter={setGlobalFilter}
-        />
-      )}
-      {activeTab === "created" && (
-        <StudentTableContent
-          data={createdStudents}
+          data={pendingRecords}
           loading={loading}
           globalFilter={globalFilter}
           setGlobalFilter={setGlobalFilter}
