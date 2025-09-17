@@ -23,6 +23,7 @@ type Registration = {
   units?: number[];
   reg_courses_id?: number[];
 };
+
 type RegistrationContextType = {
   registrations: Registration[];
   loading: boolean;
@@ -47,6 +48,18 @@ type RegistrationContextType = {
   insertMultipleRegistrations: (
     registrations: Registration[]
   ) => Promise<boolean>;
+  // ✅ bago
+  getCoursesByRegistration: (
+    registrationId: string,
+    masterFileId: string,
+    userId: string
+  ) => Promise<any[]>;
+  insertGrades: (
+    userId: string,
+    masterFileId: string,
+    registrationId: string,
+    grades: { course_id: number; grade: string | number }[]
+  ) => Promise<boolean>;
 };
 
 const AdminRegistrationContext = createContext<RegistrationContextType>({
@@ -56,7 +69,9 @@ const AdminRegistrationContext = createContext<RegistrationContextType>({
   getRegistrationById: async () => null,
   getRequestByRegistrationId: async () => null,
   updateRegistration: async () => false,
-  insertMultipleRegistrations: async () => false
+  insertMultipleRegistrations: async () => false,
+  getCoursesByRegistration: async () => [],
+  insertGrades: async () => false, // ✅ add this line
 });
 
 export const AdminRegistrationProvider: React.FC<{
@@ -150,6 +165,71 @@ export const AdminRegistrationProvider: React.FC<{
       return null;
     }
   };
+  const insertGrades = async (
+    userId: string,
+    masterFileId: string,
+    registrationId: string,
+    grades: { course_id: number; grade: string | number }[]
+  ): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/GradesController.php",
+        {
+          action: "insert_grades", // 👈 add this back
+          user_id: userId,
+          master_file_id: masterFileId,
+          registration_id: registrationId,
+          grades,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data && response.data.success) {
+        toast.success("Grades saved successfully!");
+        await fetchRegistrationData(userId);
+        return true;
+      } else {
+        toast.error(response.data.error || "Failed to save grades");
+        return false;
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Grades insert failed";
+      setError(message);
+      toast.error(message);
+      return false;
+    }
+  };
+
+  const getCoursesByRegistration = async (
+    registrationId: string,
+    masterFileId: string,
+    userId: string
+  ): Promise<any[]> => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/RegistrationController.php",
+        {
+          params: {
+            action: "get_courses",
+            registration_id: registrationId,
+            master_file_id: masterFileId,
+            user_id: userId,
+          },
+        }
+      );
+
+      if (!response.data || response.data.error) {
+        toast.error("No courses found for this registration");
+        return [];
+      }
+
+      return response.data; // backend will return array of courses
+    } catch (err) {
+      toast.error("Error fetching courses by registration");
+      return [];
+    }
+  };
 
   const getRequestByRegistrationId = async (registrationId: string) => {
     try {
@@ -215,7 +295,7 @@ export const AdminRegistrationProvider: React.FC<{
         toast.success("Registrations inserted successfully!");
         console.log(response.data); // ✅ cleaner, only your backend payload
 
-               return true;
+        return true;
       } else {
         setError(response.data.error || "Failed to insert registrations");
         toast.error("Batch insert failed");
@@ -246,9 +326,11 @@ export const AdminRegistrationProvider: React.FC<{
         loading,
         error,
         insertMultipleRegistrations,
+        insertGrades, // ✅ new
         getRegistrationById,
         getRequestByRegistrationId,
-        updateRegistration, // ✅ added
+        updateRegistration,
+        getCoursesByRegistration,
       }}
     >
       {children}

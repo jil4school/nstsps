@@ -6,6 +6,7 @@ import { toast } from "sonner";
 interface Program {
   program_id: string;
   program_name: string;
+  program_code: string;
 }
 
 type Course = {

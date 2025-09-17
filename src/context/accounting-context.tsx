@@ -12,7 +12,7 @@ interface Accounting {
 }
 
 export type AccountingRecord = {
-  balance_id: number;        // unique id for the accounting/balance row
+  balance_id: number; // unique id for the accounting/balance row
   tuition_id?: number;
   student_id: string;
   surname: string;
@@ -23,7 +23,7 @@ export type AccountingRecord = {
   sem?: string | null;
   balance: number;
   amount_paid: number;
-  status?: string | null;    // optional, blank for now
+  status?: string | null; // optional, blank for now
 };
 
 interface AccountingContextType {
@@ -61,8 +61,16 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
         { params: { user_id } }
       );
 
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        setAccountingRecord(response.data[0]);
+      const data = response.data;
+
+      if (data && data.total_balance !== undefined) {
+        setAccountingRecord({
+          id: String(user_id),
+          user_id: String(user_id),
+          balance: Number(data.total_balance),
+          school_year: data.latest_school_year,
+          sem: data.latest_sem,
+        });
       } else {
         setAccountingRecord(null);
         setError("No accounting record found.");

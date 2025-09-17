@@ -19,6 +19,8 @@ import StudentRegistrationsContent, {
 import StudentRegistrationBatch from "./student-registration-batch";
 import { AdminRegistrationProvider } from "./context/admin-registration-context";
 import AccountingHome from "./accounting-admin";
+import AcademicHome from "./academic-admin";
+import { StudentGradeRecords } from "./student-grades";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -59,7 +61,7 @@ const routes = [
   { path: "/nstsps/registrar-home", element: <RegistrarHome /> },
   {
     path: "/nstsps/registrar/student-registrations/:combinedId",
-    element: <StudentRegistrations />, // <-- wrapper na may useParams
+    element: <StudentRegistrations />, //
   },
   {
     path: "/nstsps/registrar/student-registration",
@@ -69,7 +71,16 @@ const routes = [
       </AdminRegistrationProvider>
     ),
   },
-   { path: "/nstsps/accounting-home", element: <AccountingHome /> },
+  { path: "/nstsps/accounting-home", element: <AccountingHome /> },
+  { path: "/nstsps/academics-home", element: <AcademicHome /> },
+  {
+    path: "/nstsps/academics/student-grade-records/:combinedId",
+    element: (
+      <AdminRegistrationProvider userId="">
+        <StudentGradeRecords />
+      </AdminRegistrationProvider>
+    ),
+  },
 ];
 
 function App() {
