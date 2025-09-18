@@ -27,7 +27,7 @@ import {
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMasterFile } from "./context/master-file-context";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useProgram } from "@/context/miscellaneous-context";
 import { toast } from "sonner";
 import HeaderAdmin from "./header-admin";
@@ -35,6 +35,10 @@ import HeaderAdmin from "./header-admin";
 const formSchema = z.object({
   student_id: z.string(),
   program_id: z.string(),
+  year_level: z.string(),
+  sem: z.string(),
+  school_year: z.string(),
+  registration_date: z.string(),
   surname: z.string(),
   first_name: z.string(),
   middle_name: z.string(),
@@ -66,7 +70,7 @@ function isValidDate(date: Date | undefined) {
 }
 
 function NewStudentSingle() {
-  const { programs } = useProgram();
+  const { programs, fetchPrograms } = useProgram();
   const { insertStudent } = useMasterFile();
   const onSubmit = async (values: any) => {
     const [surname = "", firstName = ""] = (values.guardian_name || "")
@@ -94,6 +98,10 @@ function NewStudentSingle() {
     defaultValues: {
       student_id: "",
       program_id: "",
+      year_level: "",
+      sem: "",
+      school_year: "",
+      registration_date: "",
       surname: "",
       first_name: "",
       middle_name: "",
@@ -121,7 +129,14 @@ function NewStudentSingle() {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date("2025-06-01"));
   const [month, setMonth] = useState<Date | undefined>(date);
+  // Add separate state for registration date
+  const [openReg, setOpenReg] = useState(false);
+  const [dateReg, setDateReg] = useState<Date | undefined>(new Date());
+  const [monthReg, setMonthReg] = useState<Date | undefined>(dateReg);
 
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <HeaderAdmin />
@@ -177,6 +192,167 @@ function NewStudentSingle() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            {/* Year Level */}
+            <div className="flex flex-row mt-5 items-center">
+              <span className="pl-15 w-100">Year Level*:</span>
+              <FormField
+                control={form.control}
+                name="year_level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-110">
+                          <SelectValue placeholder="Select Year Level" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white text-black">
+                          <SelectItem value="1st Year">1st Year</SelectItem>
+                          <SelectItem value="2nd Year">2nd Year</SelectItem>
+                          <SelectItem value="3rd Year">3rd Year</SelectItem>
+                          <SelectItem value="4th Year">4th Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Semester */}
+            <div className="flex flex-row mt-5 items-center">
+              <span className="pl-15 w-100">Semester*:</span>
+              <FormField
+                control={form.control}
+                name="sem"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-110">
+                          <SelectValue placeholder="Select Semester" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white text-black">
+                          <SelectItem value="First Semester">
+                            First Semester
+                          </SelectItem>
+                          <SelectItem value="Second Semester">
+                            Second Semester
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* School Year */}
+            <div className="flex flex-row mt-5 items-center">
+              <span className="pl-15 w-100">School Year*:</span>
+              <div className="flex gap-2 w-110">
+                <Input
+                  placeholder="From (e.g. 2025)"
+                  className="flex-1"
+                  onChange={(e) => {
+                    const from = e.target.value;
+                    const to =
+                      form.getValues("school_year").split("-")[1] || "";
+                    form.setValue(
+                      "school_year",
+                      from && to ? `${from}-${to}` : from
+                    );
+                  }}
+                />
+                <span className="flex-none self-center">-</span>
+                <Input
+                  placeholder="To (e.g. 2026)"
+                  className="flex-1"
+                  onChange={(e) => {
+                    const to = e.target.value;
+                    const from =
+                      form.getValues("school_year").split("-")[0] || "";
+                    form.setValue(
+                      "school_year",
+                      from && to ? `${from}-${to}` : to
+                    );
+                  }}
+                />
+              </div>
+              <FormMessage />
+            </div>
+
+            {/* Registration Date */}
+            <div className="flex flex-row mt-5 items-center">
+              <span className="pl-15 w-100">Student ID:</span>
+              <FormField
+                control={form.control}
+                name="registration_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="relative w-fit">
+                        <Input
+                          required
+                          disabled
+                          value={field.value ?? ""}
+                          placeholder="Registration Date"
+                          className="bg-background pr-10 w-110"
+                          onKeyDown={(e) => {
+                            if (e.key === "ArrowDown") {
+                              e.preventDefault();
+                              setOpenReg(true);
+                            }
+                          }}
+                        />
+                        <Popover open={openReg} onOpenChange={setOpenReg}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="absolute top-1/2 right-2 size-6 -translate-y-1/2 p-0"
+                            >
+                              <CalendarIcon className="size-4 text-muted-foreground" />
+                              <span className="sr-only">Select date</span>
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-auto overflow-hidden p-0 bg-white text-black"
+                            align="end"
+                            alignOffset={-8}
+                            sideOffset={10}
+                          >
+                            <Calendar
+                              mode="single"
+                              selected={dateReg}
+                              captionLayout="dropdown"
+                              month={monthReg}
+                              onMonthChange={setMonthReg}
+                              onSelect={(date) => {
+                                if (date) {
+                                  const formatted =
+                                    date.toLocaleDateString("en-CA");
+                                  setDateReg(date);
+                                  field.onChange(formatted);
+                                  setOpenReg(false);
+                                }
+                              }}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -245,7 +421,7 @@ function NewStudentSingle() {
               />
             </div>
             <div className="flex flex-row mt-5 items-center">
-              <span className="pl-15 w-100">Middle Name*:</span>
+              <span className="pl-15 w-100">Email*:</span>
               <FormField
                 control={form.control}
                 name="email"

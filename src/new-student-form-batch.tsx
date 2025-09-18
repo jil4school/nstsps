@@ -7,8 +7,8 @@ import axios from "axios";
 
 const downloadTemplate = () => {
   const link = document.createElement("a");
-  link.href = "http://localhost/NSTSPS_API/template/MasterFile.xlsx";
-  link.setAttribute("download", "MasterFile.xlsx");
+  link.href = "http://localhost/NSTSPS_API/template/MasterFileBatch.xlsx";
+  link.setAttribute("download", "MasterFileBatch.xlsx");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -22,6 +22,10 @@ export default function NewStudentBatch() {
     "Middle Name": "middle_name",
     Email: "email",
     Program: "program_id", // ⚡ handled separately
+    "Year Level": "year_level",
+    Semester: "sem",
+    "School Year": "school_year",
+    "Registration Date": "registration_date", // ✅ new
     Gender: "gender",
     Nationality: "nationality",
     "Civil Status": "civil_status",
@@ -38,36 +42,36 @@ export default function NewStudentBatch() {
     "Relationsip with the Student": "relation_with_the_student",
     "Guardian Mobile Number": "guardian_mobile_number",
     "Guardian Email": "guardian_email",
+    
   };
 
   const mapRowToBackend = (row: any, programs: any[]) => {
     const mapped: any = {};
 
     for (const key in row) {
-      if (headerMapping[key]) {
-        if (key === "Program") {
-          const program = programs.find(
-            (p) => p.program_name.toLowerCase() === row[key].toLowerCase()
-          );
-          mapped["program_id"] = program ? program.program_id : null;
-        } else if (key === "Birthday") {
-          const value = row[key];
-          if (value) {
-            const d = new Date(value);
-            if (!isNaN(d.getTime())) {
-              const year = d.getFullYear();
-              const month = String(d.getMonth() + 1).padStart(2, "0");
-              const day = String(d.getDate()).padStart(2, "0");
-              mapped["birthday"] = `${year}-${month}-${day}`;
-            } else {
-              mapped["birthday"] = "0000-00-00";
-            }
+      if (key === "Program") {
+        const program = programs.find(
+          (p) => p.program_name.toLowerCase() === row[key].toLowerCase()
+        );
+        mapped["program_id"] = program ? program.program_id : null;
+      } else if (key === "Birthday" || key === "Registration Date") {
+        // ✅ handle registration date
+        const value = row[key];
+        if (value) {
+          const d = new Date(value);
+          if (!isNaN(d.getTime())) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            mapped[headerMapping[key]] = `${year}-${month}-${day}`;
           } else {
-            mapped["birthday"] = "0000-00-00";
+            mapped[headerMapping[key]] = "0000-00-00";
           }
         } else {
-          mapped[headerMapping[key]] = row[key];
+          mapped[headerMapping[key]] = "0000-00-00";
         }
+      } else {
+        mapped[headerMapping[key]] = row[key];
       }
     }
 
