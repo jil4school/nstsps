@@ -33,8 +33,17 @@ interface StudentInfo {
   year_level?: string;
 }
 
+interface Enrollment {
+  registration_id: string;
+  sem: string;
+  school_year: string;
+  program_name: string;
+  year_level: string;
+}
+
 interface MasterFileContextType {
   student: StudentInfo | null;
+  latestEnrollment: Enrollment | null; // 🔹 add this
   fetchStudentInfo: (user_id: string) => Promise<void>;
   updateStudentInfo: (data: Partial<StudentInfo>) => Promise<void>;
   error: string | null;
@@ -44,8 +53,9 @@ interface MasterFileContextType {
   insertMultipleStudents: (data: StudentInfo[]) => Promise<boolean>;
   downloadSPSEmail: () => Promise<void>;
   uploadSPSEmail: (file: File) => Promise<boolean>;
-  fetchPendingEmails: () => Promise<StudentInfo[] | null>; // 👈 new
-  fetchCreatedEmails: () => Promise<StudentInfo[] | null>; // 👈 new
+  fetchPendingEmails: () => Promise<StudentInfo[] | null>;
+  fetchCreatedEmails: () => Promise<StudentInfo[] | null>;
+  fetchLatestEnrollment: (user_id: string) => Promise<void>;
 }
 
 const MasterFileContext = createContext<MasterFileContextType | undefined>(
@@ -56,10 +66,29 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
   const [student, setStudent] = useState<StudentInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { user } = useLogin();
+  const [latestEnrollment, setLatestEnrollment] = useState<Enrollment | null>(
+    null
+  );
+
+  const fetchLatestEnrollment = async (user_id: string) => {
+    try {
+      const response = await axios.get(
+        `http://localhost/NSTSPS_API/controller/MasterFileController.php?user_id=${user_id}&latest_enrollment=1`
+      );
+      if (response.data && !response.data.error) {
+        setLatestEnrollment(response.data);
+      } else {
+        setLatestEnrollment(null);
+      }
+    } catch (err) {
+      setLatestEnrollment(null);
+    }
+  };
 
   useEffect(() => {
     if (user?.user_id) {
-      fetchStudentInfo(user.user_id.toString());
+      fetchStudentInfo(String(user.user_id));
+      fetchLatestEnrollment(String(user.user_id));
     }
   }, [user]);
 
@@ -302,6 +331,8 @@ export const MasterFileProvider = ({ children }: { children: ReactNode }) => {
     uploadSPSEmail,
     fetchPendingEmails, // 👈 added
     fetchCreatedEmails, // 👈 added
+    fetchLatestEnrollment, // 🔹 add this
+    latestEnrollment, // 🔹 optionally add to context if you want to access directly
   };
 
   return (

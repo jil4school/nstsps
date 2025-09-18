@@ -322,11 +322,13 @@ export function StudentTableRegistrar() {
   const [receiptUrl, setReceiptUrl] = React.useState<string | null>(null);
   const [courses, setCourses] = React.useState<CourseInfo[]>([]);
 
-  // Function to open receipt dialog
+  const API_BASE = "http://localhost/NSTSPS_API"; // adjust to your backend base
+
   const handleViewReceipt = (receipt: string) => {
     if (receipt) {
-      setReceiptUrl(receipt); // e.g., "/uploads/receipt.png"
-      setSelectedStudent(null); // close the main dialog
+      const url = `${API_BASE}/uploads/${receipt}`;
+      setReceiptUrl(url);
+      setSelectedStudent(null); // close student/request dialog
       setReceiptDialogOpen(true);
     }
   };
@@ -775,169 +777,161 @@ export function StudentTableRegistrar() {
             </div>
           </div>
 
+          {/* Student / Request Details Dialog */}
           <Dialog
             open={!!selectedStudent}
             onOpenChange={() => setSelectedStudent(null)}
           >
-            <Dialog
-              open={!!selectedStudent}
-              onOpenChange={() => setSelectedStudent(null)}
-            >
-              <DialogContent className="max-w-lg bg-white">
-                <DialogHeader>
-                  <DialogTitle className="text-center">
-                    {activeTab === "students"
-                      ? "Student Details"
-                      : "Request Details"}
-                  </DialogTitle>
-                </DialogHeader>
+            <DialogContent className="max-w-lg bg-white">
+              <DialogHeader>
+                <DialogTitle className="text-center">
+                  {activeTab === "students"
+                    ? "Student Details"
+                    : "Request Details"}
+                </DialogTitle>
+              </DialogHeader>
 
-                {/* Student Profile Tab */}
-                {selectedStudent && activeTab === "students" && (
-                  <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
-                    <p>
-                      <strong>Student ID:</strong> {selectedStudent.student_id}
-                    </p>
-                    <p>
-                      <strong>Surname:</strong> {selectedStudent.surname}
-                    </p>
-                    <p>
-                      <strong>First Name:</strong> {selectedStudent.first_name}
-                    </p>
-                    <p>
-                      <strong>Middle Name:</strong>{" "}
-                      {selectedStudent.middle_name ?? "—"}
-                    </p>
-                    <p>
-                      <strong>Gender:</strong> {selectedStudent.gender}
-                    </p>
-                    <p>
-                      <strong>Nationality:</strong>{" "}
-                      {selectedStudent.nationality}
-                    </p>
-                    <p>
-                      <strong>Civil Status:</strong>{" "}
-                      {selectedStudent.civil_status}
-                    </p>
-                    <p>
-                      <strong>Religion:</strong> {selectedStudent.religion}
-                    </p>
-                    <p>
-                      <strong>Birthday:</strong> {selectedStudent.birthday}
-                    </p>
-                    <p>
-                      <strong>Birthplace:</strong> {selectedStudent.birthplace}
-                    </p>
-                    <p>
-                      <strong>Street:</strong> {selectedStudent.street}
-                    </p>
-                    <p>
-                      <strong>Barangay:</strong> {selectedStudent.barangay}
-                    </p>
-                    <p>
-                      <strong>Region:</strong> {selectedStudent.region}
-                    </p>
-                    <p>
-                      <strong>Municipality:</strong>{" "}
-                      {selectedStudent.municipality}
-                    </p>
-                    <p>
-                      <strong>Mobile Number:</strong>{" "}
-                      {selectedStudent.mobile_number}
-                    </p>
-                    <p>
-                      <strong>Guardian Surname:</strong>{" "}
-                      {selectedStudent.guardian_surname}
-                    </p>
-                    <p>
-                      <strong>Guardian First Name:</strong>{" "}
-                      {selectedStudent.guardian_first_name}
-                    </p>
-                    <p>
-                      <strong>Relation with Student:</strong>{" "}
-                      {selectedStudent.relation_with_the_student}
-                    </p>
-                    <p>
-                      <strong>Guardian Mobile Number:</strong>{" "}
-                      {selectedStudent.guardian_mobile_number}
-                    </p>
-                    <p>
-                      <strong>Guardian Email:</strong>{" "}
-                      {selectedStudent.guardian_email}
-                    </p>
-                  </div>
-                )}
+              {/* Student Profile Tab */}
+              {selectedStudent && activeTab === "students" && (
+                <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
+                  <p>
+                    <strong>Student ID:</strong> {selectedStudent.student_id}
+                  </p>
+                  <p>
+                    <strong>Surname:</strong> {selectedStudent.surname}
+                  </p>
+                  <p>
+                    <strong>First Name:</strong> {selectedStudent.first_name}
+                  </p>
+                  <p>
+                    <strong>Middle Name:</strong>{" "}
+                    {selectedStudent.middle_name ?? "—"}
+                  </p>
+                  <p>
+                    <strong>Gender:</strong> {selectedStudent.gender}
+                  </p>
+                  <p>
+                    <strong>Nationality:</strong> {selectedStudent.nationality}
+                  </p>
+                  <p>
+                    <strong>Civil Status:</strong>{" "}
+                    {selectedStudent.civil_status}
+                  </p>
+                  <p>
+                    <strong>Religion:</strong> {selectedStudent.religion}
+                  </p>
+                  <p>
+                    <strong>Birthday:</strong> {selectedStudent.birthday}
+                  </p>
+                  <p>
+                    <strong>Birthplace:</strong> {selectedStudent.birthplace}
+                  </p>
+                  <p>
+                    <strong>Street:</strong> {selectedStudent.street}
+                  </p>
+                  <p>
+                    <strong>Barangay:</strong> {selectedStudent.barangay}
+                  </p>
+                  <p>
+                    <strong>Region:</strong> {selectedStudent.region}
+                  </p>
+                  <p>
+                    <strong>Municipality:</strong>{" "}
+                    {selectedStudent.municipality}
+                  </p>
+                  <p>
+                    <strong>Mobile Number:</strong>{" "}
+                    {selectedStudent.mobile_number}
+                  </p>
+                  <p>
+                    <strong>Guardian Surname:</strong>{" "}
+                    {selectedStudent.guardian_surname}
+                  </p>
+                  <p>
+                    <strong>Guardian First Name:</strong>{" "}
+                    {selectedStudent.guardian_first_name}
+                  </p>
+                  <p>
+                    <strong>Relation with Student:</strong>{" "}
+                    {selectedStudent.relation_with_the_student}
+                  </p>
+                  <p>
+                    <strong>Guardian Mobile Number:</strong>{" "}
+                    {selectedStudent.guardian_mobile_number}
+                  </p>
+                  <p>
+                    <strong>Guardian Email:</strong>{" "}
+                    {selectedStudent.guardian_email}
+                  </p>
+                </div>
+              )}
 
-                {/* Request Tab */}
-                {selectedStudent && activeTab !== "students" && (
-                  <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
-                    <p>
-                      <strong>Student ID:</strong> {selectedStudent.student_id}
-                    </p>
-                    <p>
-                      <strong>Student Name:</strong>{" "}
-                      {`${selectedStudent.first_name} ${
-                        selectedStudent.middle_name ?? ""
-                      } ${selectedStudent.surname}`}
-                    </p>
-                    <p>
-                      <strong>Program:</strong> {selectedStudent.program_name}
-                    </p>
-                    <p>
-                      <strong>Year Level:</strong> {selectedStudent.year_level}
-                    </p>
-                    <p>
-                      <strong>Request:</strong> {selectedStudent.request}
-                    </p>
-                    <p>
-                      <strong>Remarks:</strong>{" "}
-                      {selectedStudent.request_remarks ?? "—"}
-                    </p>
-                    <p>
-                      <strong>Purpose:</strong>{" "}
-                      {selectedStudent.request_purpose ?? "—"}
-                    </p>
-                    <p>
-                      <strong>Mode of Payment:</strong>{" "}
-                      {selectedStudent.mode_of_payment ?? "—"}
-                    </p>
-                    <p>
-                      <strong>Receipt:</strong>{" "}
-                      {selectedStudent.receipt ? (
-                        <Button
-                          variant="link"
-                          className="text-blue-600 underline"
-                          onClick={() =>
-                            handleViewReceipt(selectedStudent.receipt!)
-                          }
-                        >
-                          View Receipt
-                        </Button>
-                      ) : (
-                        "—"
-                      )}
-                    </p>
-                    {/* Receipt Dialog */}
-                    <Dialog
-                      open={receiptDialogOpen}
-                      onOpenChange={setReceiptDialogOpen}
-                    >
-                      <DialogContent className="max-w-5xl p-0 bg-black">
-                        <img
-                          src={receiptUrl || ""}
-                          alt="Receipt"
-                          className="w-full h-auto max-h-[90vh] object-contain"
-                        />
-                      </DialogContent>
-                    </Dialog>
+              {/* Request Details Tab */}
+              {selectedStudent && activeTab !== "students" && (
+                <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
+                  <p>
+                    <strong>Student ID:</strong> {selectedStudent.student_id}
+                  </p>
+                  <p>
+                    <strong>Student Name:</strong>{" "}
+                    {`${selectedStudent.first_name} ${
+                      selectedStudent.middle_name ?? ""
+                    } ${selectedStudent.surname}`}
+                  </p>
+                  <p>
+                    <strong>Program:</strong> {selectedStudent.program_name}
+                  </p>
+                  <p>
+                    <strong>Year Level:</strong> {selectedStudent.year_level}
+                  </p>
+                  <p>
+                    <strong>Request:</strong> {selectedStudent.request}
+                  </p>
+                  <p>
+                    <strong>Remarks:</strong>{" "}
+                    {selectedStudent.request_remarks ?? "—"}
+                  </p>
+                  <p>
+                    <strong>Purpose:</strong>{" "}
+                    {selectedStudent.request_purpose ?? "—"}
+                  </p>
+                  <p>
+                    <strong>Mode of Payment:</strong>{" "}
+                    {selectedStudent.mode_of_payment ?? "—"}
+                  </p>
+                  <p>
+                    <strong>Receipt:</strong>{" "}
+                    {selectedStudent.receipt ? (
+                      <Button
+                        variant="link"
+                        className="text-blue-600 underline"
+                        onClick={() =>
+                          handleViewReceipt(selectedStudent.receipt!)
+                        }
+                      >
+                        View Receipt
+                      </Button>
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {selectedStudent.status}
+                  </p>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
-                    <p>
-                      <strong>Status:</strong> {selectedStudent.status}
-                    </p>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
+          {/* Receipt Preview Dialog (separate) */}
+          <Dialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen}>
+            <DialogContent className="max-w-5xl p-0 bg-black">
+              <img
+                src={receiptUrl || ""}
+                alt="Receipt"
+                className="w-full h-auto max-h-[90vh] object-contain"
+              />
+            </DialogContent>
           </Dialog>
         </>
       )}

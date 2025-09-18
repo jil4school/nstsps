@@ -1,23 +1,25 @@
 import { useEffect } from "react";
 import SideBar from "./side-bar";
-import { useMasterFile } from "@/context/master-file-context"; 
+import { useMasterFile } from "@/context/master-file-context";
 import Header from "./header";
 import { useLogin } from "./context/login-context";
 
 function StudentHome() {
- const { student, fetchStudentInfo } = useMasterFile();
- const { user } = useLogin();
+  const { student, latestEnrollment, fetchStudentInfo, fetchLatestEnrollment } = useMasterFile();
+  const { user } = useLogin();
 
   useEffect(() => {
     if (user?.user_id) {
-      fetchStudentInfo(String(user.user_id));
+      const id = String(user.user_id);
+      fetchStudentInfo(id);
+      fetchLatestEnrollment(id);
     }
   }, [user]);
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <SideBar />
       <div className="flex flex-col w-full">
-       <Header />
+        <Header />
         <div className="ml-100  mt-35">
           <span className="text-5xl p-10" style={{ color: "#919090" }}>
             Hello, {student?.first_name || "Student"}!
@@ -51,13 +53,16 @@ function StudentHome() {
                 {student?.student_id || "000000000"}
               </span>
               <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
-                {student?.surname || "LN"}, {student?.first_name || "FN"} {student?.middle_name || "MN"}
+                {student?.surname || "LN"}, {student?.first_name || "FN"}{" "}
+                {student?.middle_name || "MN"}
               </span>
               <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
                 {student?.gender || "N/A"}
               </span>
-              <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
-                1st Semester of SY 2025-2026
+               <span className="text-xl pl-2 pb-2" style={{ color: "#919090" }}>
+                {latestEnrollment
+                  ? `${latestEnrollment.sem} of SY ${latestEnrollment.school_year} (${latestEnrollment.year_level})`
+                  : "N/A"}
               </span>
             </div>
           </div>

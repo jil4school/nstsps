@@ -57,14 +57,13 @@ function RequestForm() {
     },
   });
 
- useEffect(() => {
-  if (user?.user_id) {
-    form.setValue("user_id", user.user_id);
-    fetchStudentInfo(String(user.user_id)); // if you also need to fetch here
-  }
-}, [user]);
+  useEffect(() => {
+    if (user?.user_id) {
+      form.setValue("user_id", user.user_id);
+      fetchStudentInfo(String(user.user_id)); // if you also need to fetch here
+    }
+  }, [user]);
 
- 
   useEffect(() => {
     if (student?.master_file_id) {
       form.setValue("master_file_id", Number(student.master_file_id));
@@ -73,7 +72,16 @@ function RequestForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       await createRequest(values);
-      console.log("Form submitted successfully");
+      form.reset({
+  ...form.getValues(), // keep user_id & master_file_id
+  request: "",
+  request_remarks: "",
+  request_purpose: "",
+  mode_of_payment: "",
+  receipt: undefined,
+});
+
+
     } catch (error) {
       toast.error("Submission failed");
     }
@@ -334,12 +342,14 @@ function RequestForm() {
 
                       <div className="flex justify-end mt-5">
                         <Button
-  type="submit"
-  disabled={form.watch("master_file_id") === 0 || loading}
-  className="bg-[#1BB2EF] text-white w-20"
->
-  Submit
-</Button>
+                          type="submit"
+                          disabled={
+                            form.watch("master_file_id") === 0 || loading
+                          }
+                          className="bg-[#1BB2EF] text-white w-20"
+                        >
+                          Submit
+                        </Button>
                       </div>
                     </div>
                   </form>

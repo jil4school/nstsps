@@ -47,31 +47,28 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
       const response = await axios.post(
         "http://localhost/NSTSPS_API/controller/RequestController.php",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       if (response.data?.error) {
-        toast.error("Request submission failed:");
         setError(response.data.error);
+        toast.error(response.data.error || "Request submission failed");
       } else {
         setError(null);
-        toast.success("Request successfully submitted");
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        toast.success("Request successfully submitted", {
+          id: Date.now().toString(), // unique per call
+        });
       }
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Request submission failed";
       setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
+
   // in registration-context.tsx
   const getAllRequests = async () => {
     try {

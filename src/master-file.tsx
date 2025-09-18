@@ -68,7 +68,11 @@ function isValidDate(date: Date | undefined) {
 
 function MasterFile() {
   const { user } = useLogin();
-  const { programs } = useProgram();
+  const { programs, fetchPrograms } = useProgram();
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
+
   const { student, fetchStudentInfo, updateStudentInfo } = useMasterFile();
   const onSubmit = async (values: any) => {
     const [surname = "", firstName = ""] = (values.guardian_name || "")
@@ -82,7 +86,7 @@ function MasterFile() {
         guardian_first_name: firstName,
         student_id: student?.student_id,
         user_id: student?.user_id,
-        master_file_id: student?.master_file_id
+        master_file_id: student?.master_file_id,
       });
     } catch (error: any) {
       toast.error("Update failed:", error);
@@ -90,16 +94,16 @@ function MasterFile() {
   };
 
   useEffect(() => {
-  if (user?.user_id) {
-    fetchStudentInfo(String(user.user_id));
-  }
-}, [user]);
+    if (user?.user_id) {
+      fetchStudentInfo(String(user.user_id));
+    }
+  }, [user]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       student_id: Number(student?.student_id) || 0,
-      program_id: String(student?.program_name) || "",
+      program_id: student?.program_id?.toString() || "",
       surname: student?.surname || "",
       first_name: student?.first_name || "",
       middle_name: student?.middle_name || "",
@@ -125,39 +129,38 @@ function MasterFile() {
     },
   });
   useEffect(() => {
-    if (student) {
+    if (student && programs.length > 0) {
       form.reset({
-        student_id: Number(student?.student_id) || 0,
-        program_id: String(student?.program_id) || "",
-        surname: student?.surname || "",
-        first_name: student?.first_name || "",
-        middle_name: student?.middle_name || "",
-        gender: student?.gender || "",
-        nationality: student?.nationality || "",
-        civil_status: student?.civil_status || "",
-        religion: student?.religion || "",
-        birthday: student?.birthday || "",
-        birthplace: student?.birthplace || "",
-        street: student?.street || "",
-        barangay: student?.barangay || "",
-        region: student?.region || "",
-        municipality: student?.municipality || "",
-        mobile_number: student?.mobile_number || "",
-        guardian_name: `${student?.guardian_surname || ""}, ${
-          student?.guardian_first_name || ""
+        student_id: Number(student.student_id) || 0,
+        program_id: student.program_id?.toString() || "",
+        surname: student.surname || "",
+        first_name: student.first_name || "",
+        middle_name: student.middle_name || "",
+        gender: student.gender || "",
+        nationality: student.nationality || "",
+        civil_status: student.civil_status || "",
+        religion: student.religion || "",
+        birthday: student.birthday || "",
+        birthplace: student.birthplace || "",
+        street: student.street || "",
+        barangay: student.barangay || "",
+        region: student.region || "",
+        municipality: student.municipality || "",
+        mobile_number: student.mobile_number || "",
+        guardian_name: `${student.guardian_surname || ""}, ${
+          student.guardian_first_name || ""
         }`,
-        guardian_surname: student?.guardian_surname || "",
-        guardian_first_name: student?.guardian_first_name || "",
-        relation_with_the_student: student?.relation_with_the_student || "",
-        guardian_mobile_number: student?.guardian_mobile_number || "",
-        guardian_email: student?.guardian_email || "",
+        guardian_surname: student.guardian_surname || "",
+        guardian_first_name: student.guardian_first_name || "",
+        relation_with_the_student: student.relation_with_the_student || "",
+        guardian_mobile_number: student.guardian_mobile_number || "",
+        guardian_email: student.guardian_email || "",
       });
     }
-  }, [student]);
+  }, [student, programs]);
+
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(
-    new Date("2025-06-01")
-  );
+  const [date, setDate] = useState<Date | undefined>(new Date("2025-06-01"));
   const [month, setMonth] = useState<Date | undefined>(date);
 
   return (
@@ -205,7 +208,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Select
-                        value={field.value?.toString()}
+                        value={field.value || ""}
                         onValueChange={field.onChange}
                         disabled
                       >
@@ -361,10 +364,10 @@ function MasterFile() {
                     <FormControl>
                       <Select
                         required
-                        value={field.value} 
-                        onValueChange={field.onChange} 
+                        value={field.value}
+                        onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="placeholder:text-slate-400 text-gray-500 border-black w-110">
+                        <SelectTrigger className=" text-black border-black w-110">
                           <SelectValue placeholder="Civil Status" />
                         </SelectTrigger>
                         <SelectContent className="bg-white text-black">
@@ -618,7 +621,7 @@ function MasterFile() {
                         className="w-110"
                         onChange={(e) => {
                           const value = e.target.value;
-                          field.onChange(value); 
+                          field.onChange(value);
 
                           const [surname = "", firstName = ""] = value
                             .split(",")

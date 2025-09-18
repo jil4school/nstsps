@@ -130,7 +130,10 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         return true;
       }
 
-      setError(response.data.error || "Failed to change password");
+      // 🚀 Show backend error in toast
+      const errorMsg = response.data.error || "Failed to change password";
+      toast.error(errorMsg);
+      setError(errorMsg);
       return false;
     } catch (err: any) {
       const message =
@@ -138,6 +141,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         err.message ??
         "Password change request failed";
       setError(message);
+      toast.error(message); // 🚀 Also show toast here
       return false;
     }
   };
@@ -156,7 +160,6 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
     <LoginContext.Provider value={value}>{children}</LoginContext.Provider>
   );
 };
-
 
 export const useLogin = () => {
   const context = useContext(LoginContext);

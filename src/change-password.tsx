@@ -80,6 +80,10 @@ function ChangePassword() {
       values.new_password,
       values.confirm_password
     );
+
+    if (success) {
+      toast.success("Password changed successfully");
+    }
   }
 
   return (
@@ -130,7 +134,6 @@ function ChangePassword() {
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -164,7 +167,8 @@ function ChangePassword() {
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-500" />{" "}
+                        {/* ✅ validation errors show here */}
                       </FormItem>
                     )}
                   />
@@ -198,7 +202,8 @@ function ChangePassword() {
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-500" />{" "}
+                        {/* ✅ validation errors show here */}
                       </FormItem>
                     )}
                   />
