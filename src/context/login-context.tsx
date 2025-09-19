@@ -67,7 +67,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         await logout();
         navigate("/nstsps");
       }, 5000);
-    }, 15 * 1000); // 15 seconds for testing
+    }, 100 * 1000); // 15 seconds for testing
   };
 
   useEffect(() => {

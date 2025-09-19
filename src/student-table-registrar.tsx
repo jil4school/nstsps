@@ -367,7 +367,7 @@ export function StudentTableRegistrar() {
 
   const columns = React.useMemo(() => {
     if (activeTab === "students") {
-      return [...baseColumns, actionsColumn(activeTab)];
+      return [...baseColumns];
     }
     if (activeTab === "courses") {
       return courseColumns;
@@ -679,7 +679,11 @@ export function StudentTableRegistrar() {
       ) : (
         <>
           <div className="overflow-hidden rounded-md">
-            <Table>
+            <Table
+              className={`${
+                activeTab === "students" ? "table-fixed" : "table-auto"
+              } w-full`}
+            >
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>

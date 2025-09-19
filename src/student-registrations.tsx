@@ -12,7 +12,7 @@ import {
 } from "@/context/admin-registration-context";
 import React, { useEffect, useState } from "react";
 import { useMasterFile } from "./context/master-file-context";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import HeaderAdmin from "./header-admin";
 import { useProgram } from "@/context/miscellaneous-context";
 import { toast } from "sonner";
@@ -26,6 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./components/ui/dialog";
+import { useLogin } from "./context/login-context";
+import { IoArrowBackSharp } from "react-icons/io5";
 
 // StudentRegistrations.tsx
 
@@ -129,12 +131,31 @@ export default function StudentRegistrationsContent({
     (sum, unit) => sum + (typeof unit === "number" ? unit : 0),
     0
   );
+
+  const { user } = useLogin();
+  const navigate = useNavigate();
+
+  const goBack = () => {
+    if (user) {
+      navigate(`/nstsps/${user.role.toLowerCase()}-home`);
+    }
+  };
+
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <div className="flex flex-col w-full">
         <HeaderAdmin />
 
-        <div className="flex pl-10 pr-10 mt-25">
+        <div className="flex pl-10 pr-10 mt-25 flex-col w-full">
+          <div className="flex justify-end pb-4">
+            <button
+              onClick={goBack}
+              className="flex items-center text-blue-600 hover:underline text-sm font-medium"
+            >
+              <IoArrowBackSharp size={18} className="mr-1" />
+              <span>Back</span>
+            </button>
+          </div>
           <Table>
             <TableHeader className="bg-[#919090] text-white">
               <TableRow>
@@ -294,7 +315,7 @@ export default function StudentRegistrationsContent({
                                             courseIndex: i,
                                           })
                                         }
-                                        className="text-red-600 hover:text-red-800 p-1"
+                                        className="text-red-600 hover:text-red-800 p-1 "
                                         title="Remove Course"
                                       >
                                         <Trash2 size={18} />
@@ -309,7 +330,7 @@ export default function StudentRegistrationsContent({
                                           })
                                         }
                                       >
-                                        <DialogContent>
+                                        <DialogContent className="bg-white">
                                           <DialogHeader>
                                             <DialogTitle>
                                               Remove Course

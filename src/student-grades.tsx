@@ -14,10 +14,12 @@ import {
 } from "@/context/admin-registration-context";
 import React, { useEffect, useState } from "react";
 import { useMasterFile } from "./context/master-file-context";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import HeaderAdmin from "./header-admin";
 import { useProgram } from "@/context/miscellaneous-context";
 import { toast } from "sonner";
+import { useLogin } from "./context/login-context";
+import { IoArrowBackSharp } from "react-icons/io5";
 // ✅ Wrapper component like StudentRegistrations
 export function StudentGradeRecords() {
   const { combinedId } = useParams<{ combinedId: string }>();
@@ -112,13 +114,29 @@ export default function StudentGradeRecordsContent({
     (sum, unit) => sum + (typeof unit === "number" ? unit : 0),
     0
   );
+ const { user } = useLogin();
+  const navigate = useNavigate();
 
+  const goBack = () => {
+    if (user) {
+      navigate(`/nstsps/${user.role.toLowerCase()}-home`);
+    }
+  };
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <div className="flex flex-col w-full">
         <HeaderAdmin />
 
-        <div className="flex pl-10 pr-10 mt-25">
+        <div className="flex flex-col pl-10 pr-10 mt-25">
+          <div className="flex justify-end pb-4">
+            <button
+              onClick={goBack}
+              className="flex items-center text-blue-600 hover:underline text-sm font-medium"
+            >
+              <IoArrowBackSharp size={18} className="mr-1" />
+              <span>Back</span>
+            </button>
+          </div>
           <Table>
             <TableHeader className="bg-[#919090] text-white">
               <TableRow>

@@ -21,6 +21,9 @@ import { AdminRegistrationProvider } from "./context/admin-registration-context"
 import AccountingHome from "./accounting-admin";
 import AcademicHome from "./academic-admin";
 import { StudentGradeRecords } from "./student-grades";
+import ChangePasswordAdmin from "./change-password-admin";
+import StudentDetailsPage from "./master-file-admin-edit";
+import { AdminMasterFileProvider } from "./context/admin-master-file-context";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -81,7 +84,15 @@ const routes = [
       </AdminRegistrationProvider>
     ),
   },
-  
+  { path: "/nstsps/admin/change-password", element: <ChangePasswordAdmin /> },
+  {
+    path: "/nstsps/admission/student/:studentId",
+    element: (
+      <AdminMasterFileProvider>
+        <StudentDetailsPage />
+      </AdminMasterFileProvider>
+    ),
+  },
 ];
 
 function App() {

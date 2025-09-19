@@ -3,6 +3,9 @@ import { useMasterFile } from "./context/master-file-context";
 import HeaderAdmin from "./header-admin";
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
+import { useLogin } from "./context/login-context";
+import { useNavigate } from "react-router-dom";
+import { IoArrowBackSharp } from "react-icons/io5";
 
 export default function EmailBatch() {
   const { uploadSPSEmail } = useMasterFile();
@@ -100,14 +103,29 @@ export default function EmailBatch() {
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+  const { user } = useLogin();
+  const navigate = useNavigate();
 
+  const goBack = () => {
+    if (user) {
+      navigate(`/nstsps/${user.role.toLowerCase()}-home`);
+    }
+  };
   return (
     <div className="flex flex-row h-screen w-screen bg-white mt-20">
       <HeaderAdmin />
       <div className="w-full bg-white">
-        <h1 className="text-xl font-semibold mb-6 pl-10 pr-10 pt-10">
-          Batch Upload
-        </h1>
+        <div className="flex items-center justify-between w-full pl-10 pr-10 pt-10 mb-6">
+          <h1 className="text-xl font-semibold">Email Batch Upload</h1>
+
+          <button
+            onClick={goBack}
+            className="flex items-center text-blue-600 hover:underline text-sm font-medium"
+          >
+            <IoArrowBackSharp size={18} className="mr-1" />
+            <span>Back</span>
+          </button>
+        </div>
 
         {/* Instructions */}
         <div className="flex justify-center w-full">
@@ -180,7 +198,7 @@ export default function EmailBatch() {
 
         {/* Preview table */}
         {data.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-6 mx-10">
             <h2 className="text-sm mb-2">Preview</h2>
             <div className="overflow-auto max-w-full rounded border">
               <table className="min-w-full border-collapse table-auto">
@@ -212,13 +230,14 @@ export default function EmailBatch() {
                 </tbody>
               </table>
             </div>
-
-            <button
-              onClick={handleSubmit}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Submit
-            </button>
+            <div className="flex justify-end">
+              <button
+                onClick={handleSubmit}
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded mb-5"
+              >
+                Submit
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -3,11 +3,13 @@ import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import HeaderAdmin from "./header-admin";
 import { useAdminRegistrationContext } from "./context/admin-registration-context";
+import { useLogin } from "./context/login-context";
+import { useNavigate } from "react-router-dom";
+import { IoArrowBackSharp } from "react-icons/io5";
 
 const downloadTemplate = () => {
   const link = document.createElement("a");
-  link.href =
-    "http://localhost/NSTSPS_API/template/BatchRegistration.xlsx";
+  link.href = "http://localhost/NSTSPS_API/template/BatchRegistration.xlsx";
   link.setAttribute("download", "StudentRegistration.xlsx");
   document.body.appendChild(link);
   link.click();
@@ -128,14 +130,31 @@ export default function StudentRegistrationBatch() {
       toast.error(error.message || "An error occurred during batch upload.");
     }
   };
+  const { user } = useLogin();
+  const navigate = useNavigate();
 
+  const goBack = () => {
+    if (user) {
+      navigate(`/nstsps/${user.role.toLowerCase()}-home`);
+    }
+  };
   return (
     <div className="flex flex-row h-screen w-screen bg-white mt-20">
       <HeaderAdmin />
       <div className="w-full bg-white">
-        <h1 className="text-xl font-semibold mb-6 pl-10 pr-10 pt-10">
-          Student Registration Batch Upload
-        </h1>
+        <div className="flex items-center justify-between w-full pl-10 pr-10 pt-10 mb-6">
+          <h1 className="text-xl font-semibold">
+            Student Registration Batch Upload
+          </h1>
+
+          <button
+            onClick={goBack}
+            className="flex items-center text-blue-600 hover:underline text-sm font-medium"
+          >
+            <IoArrowBackSharp size={18} className="mr-1" />
+            <span>Back</span>
+          </button>
+        </div>
 
         {/* Instructions */}
         <div className="flex justify-center w-full">

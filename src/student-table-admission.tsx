@@ -14,6 +14,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // make sure to import
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +56,9 @@ export type StudentInfo = {
   middle_name?: string;
 };
 
-export const columns: ColumnDef<StudentInfo>[] = [
+export const columns = (
+  navigate: ReturnType<typeof useNavigate>
+): ColumnDef<StudentInfo>[] => [
   {
     accessorKey: "student_id",
     header: ({ column }) => (
@@ -101,35 +104,29 @@ export const columns: ColumnDef<StudentInfo>[] = [
   },
   {
     id: "actions",
-    enableHiding: false,
+    header: () => <div className="text-left">Actions</div>,
     cell: ({ row }) => {
       const student = row.original;
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(student.student_id)}
-            >
-              Copy Student ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View Profile</DropdownMenuItem>
-            <DropdownMenuItem>Edit Details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-[#1BB2EF] text-white"
+          onClick={() =>
+            navigate(`/nstsps/admission/student/${student.user_id}`)
+          }
+        >
+          Edit
+        </Button>
       );
     },
   },
 ];
 
 export function StudentTableAdmission() {
+  const navigate = useNavigate();
+
+  const columnsDef = React.useMemo(() => columns(navigate), [navigate]);
   const { fetchAllStudents } = useMasterFile();
   const [students, setStudents] = React.useState<StudentInfo[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -158,7 +155,7 @@ export function StudentTableAdmission() {
 
   const table = useReactTable({
     data: students,
-    columns,
+    columns: columnsDef,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
