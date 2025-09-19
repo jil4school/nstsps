@@ -101,7 +101,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
       ) {
         const userId = response.data.user_id;
         const role = response.data.role;
-        const isFirstLogin = response.data.is_first_login; // 👈 add this
+        const isFirstLogin = response.data.is_first_login;
 
         const newUser: User = { user_id: userId, email, role };
         setUser(newUser);
@@ -110,16 +110,20 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("user_id", String(userId));
         localStorage.setItem("user_email", email);
         localStorage.setItem("role", role);
-        localStorage.setItem("is_first_login", String(isFirstLogin)); // 👈 store it
+        localStorage.setItem("is_first_login", String(isFirstLogin));
 
         setError(null);
 
         if (isFirstLogin === 1 || isFirstLogin === "1") {
           toast.info("Please change your password first.");
-          window.location.href = "/nstsps/student-home"; // 👈 diretso sa home
+          // Always go to student's home for first login
+          window.location.href = "/nstsps/student-home";
         } else {
           toast.success("Login successful");
-          window.location.href = "/nstsps/student-home";
+
+          // Redirect based on role
+          const roleLower = role.toLowerCase(); // make it lowercase
+          window.location.href = `/nstsps/${roleLower}-home`;
         }
 
         return true;
