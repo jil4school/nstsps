@@ -81,6 +81,7 @@ const routes = [
       </AdminRegistrationProvider>
     ),
   },
+  
 ];
 
 function App() {

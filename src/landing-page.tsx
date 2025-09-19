@@ -9,7 +9,16 @@ import { useForm } from "react-hook-form";
 import { useLogin } from "./context/login-context";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
+import { useForgotPassword } from "./context/forgot-password-context";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const formSchema = z.object({
   email: z.string(),
@@ -28,127 +37,255 @@ function LandingPage() {
   });
   const navigate = useNavigate();
 
- async function onSubmit(values: z.infer<typeof formSchema>) {
-  const success = await login(values.email, values.password);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const success = await login(values.email, values.password);
 
-  if (success) {
-    const role = localStorage.getItem("role");
+    if (success) {
+      const role = localStorage.getItem("role");
 
-    if (role) {
-      navigate(`/nstsps/${role}-home`);
+      if (role) {
+        navigate(`/nstsps/${role}-home`);
+      } else {
+        toast.error("Role not found for user");
+      }
     } else {
-      toast.error("Role not found for user");
+      toast.error("❌ Login failed");
     }
-  } else {
-    toast.error("❌ Login failed");
   }
-}
+
+  const {
+    showModal,
+    openModal,
+    closeModal,
+    step,
+    email,
+    setEmail,
+    sendVerification,
+    verifyCode,
+    countdown,
+    resendCode,
+    changePassword,
+  } = useForgotPassword();
+  const [codeInputs, setCodeInputs] = useState<string[]>(Array(6).fill(""));
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const { setIsForgotPasswordOpen } = useLogin(); // add this
+
+  const openModalHandler = () => {
+    setIsForgotPasswordOpen(true);
+    openModal();
+  };
+
+  const closeModalHandler = () => {
+    setIsForgotPasswordOpen(false);
+    closeModal();
+  };
 
   return (
-    <div className="flex flex-row justify-center items-center h-screen w-screen bg-white">
-      <img
-        className="sm:w-[200px] md:w-[300px] lg:w-[500px] xl:w-[605px]"
-        src={NST}
-        alt="NST Logo"
-        style={{
-          boxShadow: "-8px 8px 10px rgba(0, 0, 0, 0.25)",
-        }}
-      />
+    <>
+      <div className="flex flex-row justify-center items-center h-screen w-screen bg-white">
+        <img
+          className="sm:w-[200px] md:w-[300px] lg:w-[500px] xl:w-[605px]"
+          src={NST}
+          alt="NST Logo"
+          style={{
+            boxShadow: "-8px 8px 10px rgba(0, 0, 0, 0.25)",
+          }}
+        />
 
-      <div
-        className="w-[200px] sm:w-[100px] md:w-[150px] lg:w-[200px] xl:w-[306px] h-[374px] sm:h-[124px] md:h-[185px] lg:h-[309px] xl:h-[374px] flex-col items-center p-15 "
-        style={{ background: "#1BB2EF" }}
-      >
-        <span className="my-class text-white mb-3 block">User Login</span>
+        <div
+          className="w-[200px] sm:w-[100px] md:w-[150px] lg:w-[200px] xl:w-[306px] h-[374px] sm:h-[124px] md:h-[185px] lg:h-[309px] xl:h-[374px] flex-col items-center p-15 "
+          style={{ background: "#1BB2EF" }}
+        >
+          <span className="my-class text-white mb-3 block">User Login</span>
 
-        <div className="relative w-full mb-3">
-          <div className="relative w-full mb-7">
-            <Form {...form}>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  form.handleSubmit(onSubmit)();
-                }}
-                className="grid gap-4"
-              >
-                <div className="relative">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    width={20}
-                    height={20}
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 3.75a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5m-4 9.5A3.75 3.75 0 0 0 4.25 17v1.188c0 .754.546 1.396 1.29 1.517c4.278.699 8.642.699 12.92 0a1.54 1.54 0 0 0 1.29-1.517V17A3.75 3.75 0 0 0 16 13.25h-.34q-.28.001-.544.086l-.866.283a7.25 7.25 0 0 1-4.5 0l-.866-.283a1.8 1.8 0 0 0-.543-.086z" />
-                  </svg>{" "}
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="nst email..."
-                            className="pl-10 bg-white h-[45px] border-0 focus:border-0 focus:ring-0 focus:outline-none"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+          <div className="relative w-full mb-3">
+            <div className="relative w-full mb-7">
+              <Form {...form}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    form.handleSubmit(onSubmit)();
+                  }}
+                  className="grid gap-4"
+                >
+                  <div className="relative">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      width={20}
+                      height={20}
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 3.75a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5m-4 9.5A3.75 3.75 0 0 0 4.25 17v1.188c0 .754.546 1.396 1.29 1.517c4.278.699 8.642.699 12.92 0a1.54 1.54 0 0 0 1.29-1.517V17A3.75 3.75 0 0 0 16 13.25h-.34q-.28.001-.544.086l-.866.283a7.25 7.25 0 0 1-4.5 0l-.866-.283a1.8 1.8 0 0 0-.543-.086z" />
+                    </svg>{" "}
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="email"
+                              placeholder="nst email..."
+                              className="pl-10 bg-white h-[45px] border-0 focus:border-0 focus:ring-0 focus:outline-none"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <div className="relative">
-                  <Icon
-                    icon="mdi:password"
-                    width="20"
-                    height="20"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="password..."
-                            className="pl-10 bg-white h-[45px] border-0 focus:border-0 focus:ring-0 focus:outline-none"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex flex-col items-center mb-3">
-                  <Button
-                    type="submit"
-                    className="text-white hover:opacity-70 cursor-pointer"
-                    style={{ background: "#0F88B6" }}
-                  >
-                    Login
-                  </Button>
-                 
-                </div>
-              </form>
-            </Form>
+                  <div className="relative">
+                    <Icon
+                      icon="mdi:password"
+                      width="20"
+                      height="20"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="password"
+                              placeholder="password..."
+                              className="pl-10 bg-white h-[45px] border-0 focus:border-0 focus:ring-0 focus:outline-none"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex flex-col items-center mb-3">
+                    <Button
+                      type="submit"
+                      className="text-white hover:opacity-70 cursor-pointer"
+                      style={{ background: "#0F88B6" }}
+                    >
+                      Login
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <Button
+              variant="link"
+              style={{ color: "#919090" }}
+              onClick={openModalHandler}
+            >
+              Forgot Password?
+            </Button>
           </div>
         </div>
-        <div className="flex justify-center">
-          <Button
-            variant="link"
-            style={{ color: "#919090" }}
-            className="cursor-pointer"
-          >
-            Forgot Password?
-          </Button>
-        </div>
       </div>
-    </div>
+      {showModal && (
+        <Dialog open={showModal} onOpenChange={closeModalHandler}>
+          <DialogContent className="w-[400px] bg-white">
+            <DialogHeader>
+              <DialogTitle>
+                {step === "email" && "Forgot Password"}
+                {step === "verify" && "Enter Verification Code"}
+                {step === "changePassword" && "Change Password"}
+              </DialogTitle>
+            </DialogHeader>
+
+            {/* Dialog Body */}
+            {step === "email" && (
+              <>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your NST email"
+                />
+                <Button
+                  className="mt-4 bg-[#1BB2EF] text-white"
+                  onClick={sendVerification}
+                >
+                  Send Verification Code
+                </Button>
+              </>
+            )}
+
+            {step === "verify" && (
+              <>
+                <div className="flex justify-between gap-2 mb-2">
+                  {codeInputs.map((val, i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      maxLength={1}
+                      value={val}
+                      className="w-12 h-12 text-center border rounded"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/, "");
+                        const newInputs = [...codeInputs];
+                        newInputs[i] = val;
+                        setCodeInputs(newInputs);
+
+                        if (val && i < 5) {
+                          const nextInput = document.getElementById(
+                            `code-${i + 1}`
+                          ) as HTMLInputElement;
+                          nextInput?.focus();
+                        }
+
+                        if (newInputs.every((c) => c !== "")) {
+                          verifyCode(newInputs.join(""));
+                        }
+                      }}
+                      id={`code-${i}`}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500">
+                  Resend code in: {countdown}s
+                </p>
+                {countdown === 0 && (
+                  <Button onClick={resendCode}>Resend Verification</Button>
+                )}
+              </>
+            )}
+
+            {step === "changePassword" && (
+              <>
+                <Input
+                  type="password"
+                  placeholder="New Password"
+                  className="mb-2"
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                />
+                <Input
+                  type="password"
+                  placeholder="Confirm Password"
+                  className="mb-2"
+                  value={confirmPass}
+                  onChange={(e) => setConfirmPass(e.target.value)}
+                />
+                <Button onClick={() => changePassword(newPass, confirmPass)}>
+                  Change Password
+                </Button>
+              </>
+            )}
+
+            <DialogFooter>
+              <Button variant="link" onClick={closeModal}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
 export default LandingPage;

@@ -11,13 +11,15 @@ import { GradesProvider } from "./context/grades-context.tsx";
 import { RequestProvider } from "./context/request-context.tsx";
 import { Toaster } from "./components/ui/sonner.tsx";
 import { AccountingProvider } from "./context/accounting-context.tsx";
+import { ForgotPasswordProvider } from "./context/forgot-password-context.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <LoginProvider>
-        <ProgramProvider>
-          <MasterFileProvider>
+        <ForgotPasswordProvider>
+          <ProgramProvider>
+            <MasterFileProvider>
               <StudentRegistrationProvider>
                 <GradesProvider>
                   <RequestProvider>
@@ -28,8 +30,9 @@ createRoot(document.getElementById("root")!).render(
                   </RequestProvider>
                 </GradesProvider>
               </StudentRegistrationProvider>
-          </MasterFileProvider>
-        </ProgramProvider>
+            </MasterFileProvider>
+          </ProgramProvider>
+        </ForgotPasswordProvider>
       </LoginProvider>
     </BrowserRouter>
   </StrictMode>
