@@ -297,7 +297,7 @@ function NewStudentSingle() {
 
             {/* Registration Date */}
             <div className="flex flex-row mt-5 items-center">
-              <span className="pl-15 w-100">Student ID:</span>
+              <span className="pl-15 w-100">Registration Date:</span>
               <FormField
                 control={form.control}
                 name="registration_date"
