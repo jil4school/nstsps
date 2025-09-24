@@ -26,6 +26,20 @@ export type AccountingRecord = {
   status?: string | null; // optional, blank for now
 };
 
+type InsertAccountingData = {
+  student_id: string;
+  surname: string;
+  first_name: string;
+  middle_name?: string | null;
+  program_id: number;
+  year_level: string;
+  sem: string;
+  school_year: string;
+  total_tuition_fee: number;
+  amount_paid: number;
+  mode_of_payment: string;
+};
+
 interface AccountingContextType {
   accountingRecord: Accounting | null;
   fetchAccounting: (user_id: string | number) => Promise<void>;
@@ -36,6 +50,7 @@ interface AccountingContextType {
     balance_id: number | string,
     amount_paid: number
   ) => Promise<boolean>;
+  insertAccounting: (formData: InsertAccountingData) => Promise<boolean>;
 }
 
 const AccountingContext = createContext<AccountingContextType | undefined>(
@@ -128,6 +143,23 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
+  const insertAccounting = async (formData: any): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/AccountingController.php",
+        { action: "insert_accounting", ...formData },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      return response.data.success;
+    } catch (err: any) {
+      console.error(
+        "Insert accounting failed:",
+        err.response?.data || err.message
+      );
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (user?.user_id) {
@@ -142,6 +174,7 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
     error,
     setError,
     updateBalance,
+    insertAccounting,
   };
 
   return (
