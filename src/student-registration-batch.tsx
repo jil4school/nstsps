@@ -9,8 +9,8 @@ import { IoArrowBackSharp } from "react-icons/io5";
 
 const downloadTemplate = () => {
   const link = document.createElement("a");
-  link.href = "http://localhost/NSTSPS_API/template/BatchRegistration.xlsx";
-  link.setAttribute("download", "StudentRegistration.xlsx");
+  link.href = "http://localhost/NSTSPS_API/template/StudentBatchRegistration.xlsx";
+  link.setAttribute("download", "StudentBatchRegistration.xlsx");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
