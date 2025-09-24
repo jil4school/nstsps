@@ -27,7 +27,6 @@ export default function StudentRegistrationBatch() {
     "school year": "school_year",
     "year level": "year_level",
     semester: "sem",
-    "amount paid": "amount_paid", // 👈 NEW COLUMN
   };
 
   const mapRowToBackend = (row: any) => {
@@ -243,9 +242,7 @@ export default function StudentRegistrationBatch() {
                   <tr>
                     {Object.keys(data[0]).map((header, idx) => {
                       let displayHeader = header;
-                      if (header.toLowerCase() === "amount paid") {
-                        displayHeader = "Amount Paid"; // 👈 consistent label
-                      }
+                      
                       return (
                         <th
                           key={idx}
