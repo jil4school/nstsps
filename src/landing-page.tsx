@@ -46,10 +46,8 @@ function LandingPage() {
       if (role) {
         navigate(`/nstsps/${role}-home`);
       } else {
-        toast.error("Role not found for user");
+        toast.error("Role not found for user"); // ✅ keep this one
       }
-    } else {
-      toast.error("❌ Login failed");
     }
   }
 

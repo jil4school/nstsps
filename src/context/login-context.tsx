@@ -29,6 +29,7 @@ interface LoginContextType {
   setUser: Dispatch<SetStateAction<User | null>>;
   isForgotPasswordOpen: boolean; // ✅ add this
   setIsForgotPasswordOpen: Dispatch<SetStateAction<boolean>>; // ✅ add this
+  deactivateStudent: (user_id: number) => Promise<boolean>;
 }
 
 const LoginContext = createContext<LoginContextType | undefined>(undefined);
@@ -87,6 +88,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
       };
     }
   }, [user]);
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const response = await axios.post(
@@ -106,7 +108,6 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
         const newUser: User = { user_id: userId, email, role };
         setUser(newUser);
 
-        // persist
         localStorage.setItem("user_id", String(userId));
         localStorage.setItem("user_email", email);
         localStorage.setItem("role", role);
@@ -116,26 +117,27 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
 
         if (isFirstLogin === 1 || isFirstLogin === "1") {
           toast.info("Please change your password first.");
-          // Always go to student's home for first login
           window.location.href = "/nstsps/student-home";
         } else {
           toast.success("Login successful");
-
-          // Redirect based on role
-          const roleLower = role.toLowerCase(); // make it lowercase
+          const roleLower = role.toLowerCase();
           window.location.href = `/nstsps/${roleLower}-home`;
         }
 
         return true;
       }
 
-      setError("Login failed: Invalid credentials");
-      toast.error("Login failed: Invalid credentials");
+      // 🚀 If backend returned error (including "deactivated")
+      const errorMsg =
+        response.data.error || "Login failed: Invalid credentials";
+      toast.error(errorMsg);
+      setError(errorMsg);
       return false;
     } catch (err: any) {
       const message =
         err.response?.data?.error ?? err.message ?? "Login request failed";
       setError(message);
+      toast.error(message);
       return false;
     }
   };
@@ -208,6 +210,28 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
+  const deactivateStudent = async (user_id: number): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/Login.php",
+        { action: "deactivate", user_id },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data && response.data.success) {
+        toast.success(response.data.message);
+        return true;
+      }
+
+      toast.error(response.data.error || "Failed to deactivate student");
+      return false;
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.error ?? err.message ?? "Deactivate request failed"
+      );
+      return false;
+    }
+  };
 
   const changeFirstLoginPassword = async (
     user_id: number,
@@ -259,6 +283,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
     setUser,
     isForgotPasswordOpen,
     setIsForgotPasswordOpen, // ✅ expose it here
+    deactivateStudent,
   };
 
   return (
