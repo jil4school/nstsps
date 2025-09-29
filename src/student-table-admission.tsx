@@ -56,11 +56,13 @@ export type StudentInfo = {
   surname: string;
   first_name: string;
   middle_name?: string;
+  is_first_login: number;
 };
 
 export const columns = (
   navigate: ReturnType<typeof useNavigate>,
-  deactivateStudent: (user_id: number) => Promise<boolean>
+  deactivateStudent: (user_id: number) => Promise<boolean>,
+  reactivateStudent: (user_id: number) => Promise<boolean> // 👈 add this
 ): ColumnDef<StudentInfo>[] => [
   {
     accessorKey: "student_id",
@@ -126,15 +128,31 @@ export const columns = (
             >
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-red-600"
-              onClick={async (e) => {
-                e.stopPropagation();
-                await deactivateStudent(Number(student.user_id));
-              }}
-            >
-              Deactivate
-            </DropdownMenuItem>
+            {student.is_first_login === 2 ? (
+              <DropdownMenuItem
+                className="text-green-600"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const success = await reactivateStudent(
+                    Number(student.user_id)
+                  );
+                }}
+              >
+                Reactivate
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const success = await deactivateStudent(
+                    Number(student.user_id)
+                  );
+                }}
+              >
+                Deactivate
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -144,15 +162,42 @@ export const columns = (
 
 export function StudentTableAdmission() {
   const navigate = useNavigate();
-  const { deactivateStudent } = useLogin();
-
-  const columnsDef = React.useMemo(
-    () => columns(navigate, deactivateStudent),
-    [navigate, deactivateStudent]
-  );
+  const { deactivateStudent, reactivateStudent } = useLogin(); // 👈 get both
   const { fetchAllStudents } = useMasterFile();
   const [students, setStudents] = React.useState<StudentInfo[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const loadStudents = React.useCallback(async () => {
+    setLoading(true);
+    const data = await fetchAllStudents();
+    if (data) setStudents(data);
+    setLoading(false);
+  }, [fetchAllStudents]);
+
+  React.useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
+
+  const columnsDef = React.useMemo(
+    () =>
+      columns(
+        navigate,
+        async (user_id: number) => {
+          const ok = await deactivateStudent(user_id);
+          if (ok) {
+            await loadStudents(); // 🔄 refetch after success
+          }
+          return ok;
+        },
+        async (user_id: number) => {
+          const ok = await reactivateStudent(user_id);
+          if (ok) {
+            await loadStudents(); // 🔄 refetch after success
+          }
+          return ok;
+        }
+      ),
+    [navigate, deactivateStudent, reactivateStudent, loadStudents]
+  );
 
   const [selectedStudent, setSelectedStudent] =
     React.useState<StudentInfo | null>(null);

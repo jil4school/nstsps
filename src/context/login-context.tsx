@@ -30,6 +30,7 @@ interface LoginContextType {
   isForgotPasswordOpen: boolean; // ✅ add this
   setIsForgotPasswordOpen: Dispatch<SetStateAction<boolean>>; // ✅ add this
   deactivateStudent: (user_id: number) => Promise<boolean>;
+  reactivateStudent: (user_id: number) => Promise<boolean>;
 }
 
 const LoginContext = createContext<LoginContextType | undefined>(undefined);
@@ -232,6 +233,28 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
+  const reactivateStudent = async (user_id: number): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/Login.php",
+        { action: "reactivate", user_id },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data && response.data.success) {
+        toast.success(response.data.message);
+        return true;
+      }
+
+      toast.error(response.data.error || "Failed to reactivate student");
+      return false;
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.error ?? err.message ?? "Reactivate request failed"
+      );
+      return false;
+    }
+  };
 
   const changeFirstLoginPassword = async (
     user_id: number,
@@ -284,6 +307,7 @@ export const LoginProvider = ({ children }: { children: ReactNode }) => {
     isForgotPasswordOpen,
     setIsForgotPasswordOpen, // ✅ expose it here
     deactivateStudent,
+     reactivateStudent,
   };
 
   return (
