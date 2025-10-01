@@ -269,7 +269,10 @@ function LandingPage() {
                   value={confirmPass}
                   onChange={(e) => setConfirmPass(e.target.value)}
                 />
-                <Button onClick={() => changePassword(newPass, confirmPass)}>
+                <Button
+                  onClick={() => changePassword(newPass, confirmPass)}
+                  className="mt-2 bg-[#1BB2EF] text-white"
+                >
                   Change Password
                 </Button>
               </>
