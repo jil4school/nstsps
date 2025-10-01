@@ -305,6 +305,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <RadioGroup
+                      disabled
                         required
                         value={field.value}
                         onValueChange={field.onChange}
@@ -342,6 +343,7 @@ function MasterFile() {
                   <FormItem>
                     <FormControl>
                       <Input
+                      disabled
                         required
                         placeholder="Nationality"
                         {...field}
