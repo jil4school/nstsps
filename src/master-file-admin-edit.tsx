@@ -32,6 +32,8 @@ import {
 } from "./components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "./components/ui/calendar";
+import { IoArrowBackSharp } from "react-icons/io5";
+import { useLogin } from "./context/login-context";
 
 const formSchema = z.object({
   student_id: z.number(),
@@ -146,13 +148,28 @@ function StudentDetailsPage() {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date("2025-06-01"));
   const [month, setMonth] = useState<Date | undefined>(date);
+  const { user } = useLogin();
 
+  const goBack = () => {
+    if (user) {
+      navigate(`/nstsps/${user.role.toLowerCase()}-home`);
+    }
+  };
   return (
     <div className="flex flex-row h-screen w-screen bg-white">
       <HeaderAdmin />
       <div className="flex flex-col w-full mt-23">
+        <div className="flex justify-end text-sm pb-4 pr-15">
+          <button
+            onClick={goBack}
+            className="flex items-center text-blue-600 hover:underline text-sm font-medium"
+          >
+            <IoArrowBackSharp size={18} className="mr-1" />
+            <span>Back</span>
+          </button>
+        </div>
         {/* PERSONAL DATA Section */}
-        <div style={{ background: "#919090" }} className="w-auto mt-14">
+        <div style={{ background: "#919090" }} className="w-auto">
           <span className="text-white pl-15">PERSONAL DATA</span>
         </div>
         <Form {...form}>
@@ -166,7 +183,6 @@ function StudentDetailsPage() {
                   <FormItem>
                     <FormControl>
                       <Input
-                      
                         {...field}
                         placeholder="Student ID"
                         disabled
