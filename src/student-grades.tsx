@@ -114,7 +114,7 @@ export default function StudentGradeRecordsContent({
     (sum, unit) => sum + (typeof unit === "number" ? unit : 0),
     0
   );
- const { user } = useLogin();
+  const { user } = useLogin();
   const navigate = useNavigate();
 
   const goBack = () => {
@@ -247,50 +247,80 @@ export default function StudentGradeRecordsContent({
                             </TableBody>
                           </Table>
 
-                          {/* Total units + save button */}
-                          <div className="flex justify-between items-center mt-3">
+                          {/* Total units + GWA + save button (GWA beside Save) */}
+                          <div className="flex justify-between items-center mt-3 w-full">
+                            {/* Left side: Total Units */}
                             <span className="font-semibold">
-                              Total No. of Units:{" "}
+                              Total Units:{" "}
                               {(courseData[index]?.units ?? []).reduce(
                                 (sum, unit) =>
                                   sum + (typeof unit === "number" ? unit : 0),
                                 0
                               )}
                             </span>
-                            <button
-                              onClick={async () => {
-                                if (!courseData[index]) return;
 
-                                const gradesPayload = (
-                                  courseData[index].grades || []
-                                ).map((grade: any, i: string | number) => ({
-                                  course_id: Number(
-                                    programCourses.find(
-                                      (c) =>
-                                        c.course_description ===
-                                        courseData[index].descriptions?.[i]
-                                    )?.course_id ?? 0
-                                  ),
-                                  grade: grade || "", // can be "" if empty
-                                }));
+                            {/* Right side: GWA + Save */}
+                            <div className="flex items-center gap-15">
+                              <span className="font-semibold">
+                                GWA:{" "}
+                                {(() => {
+                                  const grades =
+                                    courseData[index]?.grades || [];
+                                  const units = courseData[index]?.units || [];
 
-                                const success = await insertGrades(
-                                  registrations[index].user_id,
-                                  registrations[index].master_file_id,
-                                  registrations[index].registration_id,
-                                  gradesPayload
-                                );
+                                  let totalWeighted = 0;
+                                  let totalUnits = 0;
 
-                                if (success) {
-                                  toast.success("Grades saved!");
-                                } else {
-                                  toast.error("Failed to save grades");
-                                }
-                              }}
-                              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded"
-                            >
-                              Save
-                            </button>
+                                  grades.forEach((g, i) => {
+                                    const numericGrade = parseFloat(g);
+                                    const unit = Number(units[i]);
+                                    if (!isNaN(numericGrade) && !isNaN(unit)) {
+                                      totalWeighted += numericGrade * unit;
+                                      totalUnits += unit;
+                                    }
+                                  });
+
+                                  return totalUnits > 0
+                                    ? (totalWeighted / totalUnits).toFixed(2)
+                                    : "N/A";
+                                })()}
+                              </span>
+
+                              <button
+                                onClick={async () => {
+                                  if (!courseData[index]) return;
+
+                                  const gradesPayload = (
+                                    courseData[index].grades || []
+                                  ).map((grade: any, i: number) => ({
+                                    course_id: Number(
+                                      programCourses.find(
+                                        (c) =>
+                                          c.course_description ===
+                                          courseData[index].descriptions?.[i]
+                                      )?.course_id ?? 0
+                                    ),
+                                    grade: grade || "", // can be "" if empty
+                                  }));
+
+                                  const success = await insertGrades(
+                                    registrations[index].user_id,
+                                    registrations[index].master_file_id,
+                                    registrations[index].registration_id,
+                                    gradesPayload
+                                  );
+
+                                  if (success) {
+                                    toast.success("Grades saved!");
+                                  } else {
+                                    toast.error("Failed to save grades");
+                                  }
+                                }}
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded"
+                              >
+                                Save
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </TableCell>
