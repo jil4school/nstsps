@@ -434,6 +434,40 @@ export function StudentTableRegistrar() {
     loadData();
   }, [activeTab, fetchAllStudents, getAllRequests]);
 
+  const customGlobalFilter = (
+    row: any,
+    columnId: string,
+    filterValue: string
+  ) => {
+    const student = row.original as StudentInfo;
+
+    const haystackParts = [
+      student.student_id,
+      student.surname,
+      student.first_name,
+      student.middle_name ?? "",
+      student.program_name,
+      student.email ?? "",
+    ];
+
+    const fullName1 = `${student.surname}, ${[
+      student.first_name,
+      student.middle_name,
+    ]
+      .filter(Boolean)
+      .join(" ")}`;
+    const fullName2 = [student.first_name, student.middle_name, student.surname]
+      .filter(Boolean)
+      .join(" ");
+
+    const haystack = [...haystackParts, fullName1, fullName2]
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+    return haystack.includes(filterValue.toLowerCase().trim());
+  };
+
   const table = useReactTable({
     data: students,
     columns,
@@ -453,39 +487,7 @@ export function StudentTableRegistrar() {
       rowSelection,
       globalFilter,
     },
-    globalFilterFn: (row, filterValue) => {
-      const student = row.original as StudentInfo;
-
-      const haystackParts = [
-        student.student_id,
-        student.surname,
-        student.first_name,
-        student.middle_name ?? "",
-        student.program_name,
-        (row.getValue("email") as string) ?? "",
-      ];
-
-      const fullName1 = `${student.surname}, ${[
-        student.first_name,
-        student.middle_name,
-      ]
-        .filter(Boolean)
-        .join(" ")}`;
-      const fullName2 = [
-        student.first_name,
-        student.middle_name,
-        student.surname,
-      ]
-        .filter(Boolean)
-        .join(" ");
-
-      const haystack = [...haystackParts, fullName1, fullName2]
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .toLowerCase();
-
-      return haystack.includes(filterValue.toLowerCase().trim());
-    },
+    globalFilterFn: customGlobalFilter,
   });
 
   const courseGroups = [
