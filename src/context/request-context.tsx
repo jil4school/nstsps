@@ -21,6 +21,8 @@ interface RequestContextType {
   setError: Dispatch<SetStateAction<string | null>>;
   loading: boolean;
   getAllRequests: () => Promise<any[]>;
+  getPendingRequests: () => Promise<any[]>;
+  getProcessedOrDeclinedRequests: () => Promise<any[]>;
   updateRequestStatus: (
     requestId: string,
     status: string
@@ -82,6 +84,35 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const getPendingRequests = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/RequestController.php"
+      );
+      const all = response.data || [];
+      return all.filter((req: any) => req.status === "Pending");
+    } catch (err) {
+      toast.error("Failed to fetch pending requests");
+      return [];
+    }
+  };
+
+  // -------------------- GET PROCESSED & DECLINED REQUESTS --------------------
+  const getProcessedOrDeclinedRequests = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost/NSTSPS_API/controller/RequestController.php"
+      );
+      const all = response.data || [];
+      return all.filter(
+        (req: any) => req.status === "Processed" || req.status === "Declined"
+      );
+    } catch (err) {
+      toast.error("Failed to fetch processed/declined requests");
+      return [];
+    }
+  };
+
   const updateRequestStatus = async (requestId: string, status: string) => {
     try {
       const response = await axios.put(
@@ -111,6 +142,8 @@ export const RequestProvider = ({ children }: { children: ReactNode }) => {
     setError,
     loading,
     getAllRequests,
+    getPendingRequests,
+    getProcessedOrDeclinedRequests,
     updateRequestStatus,
   };
 

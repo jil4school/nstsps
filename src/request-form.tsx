@@ -73,15 +73,13 @@ function RequestForm() {
     try {
       await createRequest(values);
       form.reset({
-  ...form.getValues(), // keep user_id & master_file_id
-  request: "",
-  request_remarks: "",
-  request_purpose: "",
-  mode_of_payment: "",
-  receipt: undefined,
-});
-
-
+        ...form.getValues(), // keep user_id & master_file_id
+        request: "",
+        request_remarks: "",
+        request_purpose: "",
+        mode_of_payment: "",
+        receipt: undefined,
+      });
     } catch (error) {
       toast.error("Submission failed");
     }
@@ -357,15 +355,22 @@ function RequestForm() {
               </div>
             </div>
             <div className="fixed top-50 right-5 w-[20%] h-120 bg-[#919090] rounded-md p-3">
-              <Tabs defaultValue="request" className="w-full">
+              <Tabs defaultValue="Pending" className="w-full">
                 <TabsList className="w-full bg-[#afadad] text-white">
-                  <TabsTrigger value="Pending" className="w-[50%]">
+                  <TabsTrigger
+                    value="Pending"
+                    className="w-[50%] data-[state=active]:bg-[#cfcfcf] data-[state=active]:text-black transition"
+                  >
                     Pending
                   </TabsTrigger>
-                  <TabsTrigger value="Archive" className="w-[50%]">
+                  <TabsTrigger
+                    value="Archive"
+                    className="w-[50%] data-[state=active]:bg-[#cfcfcf] data-[state=active]:text-black transition"
+                  >
                     Archive
                   </TabsTrigger>
                 </TabsList>
+
                 <TabsContent value="Pending">
                   <PendingRequestTable />
                 </TabsContent>
