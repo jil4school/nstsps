@@ -1,32 +1,91 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import {
+  AdminMasterFileProvider,
+  useAdminMasterFile,
+} from "./context/admin-master-file-context";
+import { useLogin } from "./context/login-context";
+import { useRegistrationContext } from "./context/registration-context";
+
+interface Schedule {
+  schedule_id: number;
+  course_description: string;
+  course_id: number;
+  day: string;
+  start_time: string;
+  end_time: string;
+}
 
 function ScheduleDisplayTable() {
-  const schedules = [
-    {
-      schedule_id: 1,
-      course_description: "The Contemporary World",
-      course_id: 23,
-      day: "Monday",
-      start_time: "07:30:00",
-      end_time: "10:00:00",
-    },
-    {
-      schedule_id: 2,
-      course_description: "Mathematics in the Modern World",
-      course_id: 24,
-      day: "Tuesday",
-      start_time: "08:00:00",
-      end_time: "11:00:00",
-    },
-    {
-      schedule_id: 3,
-      course_description: "Purposive Communication",
-      course_id: 25,
-      day: "Thursday",
-      start_time: "13:00:00",
-      end_time: "15:00:00",
-    },
-  ];
+  const { registrations, getRegistrationById } = useRegistrationContext();
+
+  const { fetchSchedules, fetchStudentById } = useAdminMasterFile();
+  const { user } = useLogin();
+
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSchedule = async () => {
+      if (!user?.user_id) return;
+
+      setLoading(true);
+      try {
+        const student = await fetchStudentById(String(user.user_id));
+        console.log("👤 Logged in user:", user);
+        console.log("🎓 Student info:", student);
+
+        if (!student) {
+          console.warn("No student data found.");
+          setSchedules([]);
+          return;
+        }
+
+        // ✅ Use Registration Context instead of direct API call
+        let latestReg = null;
+
+        if (registrations.length > 0) {
+          latestReg = registrations[registrations.length - 1];
+        } else {
+          const fetchedReg = await getRegistrationById(
+            student.registration_id,
+            student.master_file_id,
+            student.user_id
+          );
+          latestReg = fetchedReg;
+        }
+
+        console.log("🧾 Latest registration:", latestReg);
+
+        if (!latestReg) {
+          console.warn("No registration record found for this student.");
+          setSchedules([]);
+          return;
+        }
+
+        const { program_id, year_level, sem, school_year } = latestReg;
+
+        // ✅ Fetch schedule based on registration info
+        // Ensure all parameters are strings to satisfy fetchSchedules signature
+        const fetched = await fetchSchedules(
+          String(program_id ?? ""),
+          String(year_level ?? ""),
+          String(sem ?? ""),
+          String(school_year ?? "")
+        );
+
+        console.log("🗓️ Fetched schedules:", fetched);
+
+        setSchedules(Array.isArray(fetched) ? fetched : []);
+      } catch (err) {
+        console.error("Error loading schedule:", err);
+        setSchedules([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSchedule();
+  }, [user, registrations]);
 
   // Generate 30-min time slots from 7:00 AM to 7:00 PM
   const generateTimeSlots = () => {
@@ -38,7 +97,7 @@ function ScheduleDisplayTable() {
 
     while (start < end) {
       const next = new Date(start.getTime() + 30 * 60000);
-      const formatTime = (date) =>
+      const formatTime = (date: Date) =>
         date.toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -65,30 +124,38 @@ function ScheduleDisplayTable() {
   ];
 
   // Determine what to show for each cell
-  const getCellValue = (day, slot) => {
-    const sched = schedules.find((s) => s.day === day);
-    if (!sched) return "Free";
+  const getCellValue = (
+    day: string,
+    slot: { startTime: number; endTime: number }
+  ) => {
+    const dailySchedules = schedules.filter((s) => s.day === day);
+    if (dailySchedules.length === 0) return "";
 
-    const [sh, sm] = sched.start_time.split(":").map(Number);
-    const [eh, em] = sched.end_time.split(":").map(Number);
-    const schedStart = sh * 60 + sm;
-    const schedEnd = eh * 60 + em;
+    for (const sched of dailySchedules) {
+      const [sh, sm] = sched.start_time.split(":").map(Number);
+      const [eh, em] = sched.end_time.split(":").map(Number);
+      const schedStart = sh * 60 + sm;
+      const schedEnd = eh * 60 + em;
 
-    // If slot overlaps with the schedule
-    if (slot.endTime > schedStart && slot.startTime < schedEnd) {
-      // Exact start slot → subject name
-      if (slot.startTime === schedStart) return sched.course_description;
-      // Within schedule duration → "-do-"
-      return "-do-";
+      if (slot.endTime > schedStart && slot.startTime < schedEnd) {
+        if (slot.startTime === schedStart)
+          return <span className="font-bold">{sched.course_description}</span>;
+        return "-do-";
+      }
     }
 
-    return "Free";
+    return "";
   };
+
+  if (loading)
+    return (
+      <div className="text-center py-10 text-gray-600">Loading schedule...</div>
+    );
 
   return (
     <div className="overflow-x-auto shadow-lg border border-gray-300">
       <table className="min-w-full border-collapse text-center text-sm">
-        <thead className="bg-gray-200 text-gray-700">
+        <thead className="bg-[#1BB2EF] text-white sticky top-0">
           <tr>
             <th className="border px-3 py-2 w-32">Time</th>
             {days.map((day) => (
@@ -117,4 +184,14 @@ function ScheduleDisplayTable() {
   );
 }
 
-export default ScheduleDisplayTable;
+export { ScheduleDisplayTable };
+
+function StudentSchedulePage() {
+  return (
+    <AdminMasterFileProvider>
+      <ScheduleDisplayTable />
+    </AdminMasterFileProvider>
+  );
+}
+
+export default StudentSchedulePage;

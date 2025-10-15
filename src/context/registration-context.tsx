@@ -77,6 +77,7 @@ export const StudentRegistrationProvider: React.FC<{
         registration_id: item.registration_id,
         program_name: item.program_name,
         school_year: item.school_year,
+        year_level: item.year_level, // ✅ Add this line
       }));
 
       setRegistrations(formatted);

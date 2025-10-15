@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 interface StudentInfo {
+  registration_id(registration_id: any, master_file_id: any, user_id: string): unknown;
   street: string | undefined;
   barangay: string | undefined;
   region: string | undefined;
@@ -164,7 +165,8 @@ export const AdminMasterFileProvider = ({
     yearLevel: string,
     sem: string,
     schoolYear: string
-  ): Promise<void> => {
+  ): Promise<any[]> => {
+    // ← return type is an array now
     try {
       const response = await axios.get(
         `http://localhost/NSTSPS_API/controller/ScheduleController.php`,
@@ -180,12 +182,14 @@ export const AdminMasterFileProvider = ({
 
       if (response.data.success) {
         console.log("Fetched schedules:", response.data.schedules);
-        // TODO: setSchedules(response.data.schedules); ← if you’ll use state to render in table
+        return response.data.schedules; // ✅ return data
       } else {
         console.warn("No schedules found");
+        return []; // ✅ return empty array instead of undefined
       }
     } catch (err: any) {
       console.error("Failed to fetch schedules:", err.message);
+      return []; // ✅ prevent crash
     }
   };
 

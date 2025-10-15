@@ -4,7 +4,7 @@ import { useMasterFile } from "./context/master-file-context";
 import { useAccounting } from "./context/accounting-context";
 import { useEffect } from "react";
 import { useLogin } from "./context/login-context";
-import ScheduleDisplayTable from "./schedule-display-table";
+import StudentSchedulePage from "./schedule-display-table";
 
 function ScheduleDisplay() {
   const { fetchStudentInfo } = useMasterFile();
@@ -23,8 +23,8 @@ function ScheduleDisplay() {
     <div className="flex flex-row h-screen w-screen bg-white">
       <SideBar />
       <Header />
-      <div className="w-[70%] ml-90 mt-36 mb-10">
-        <ScheduleDisplayTable/>
+      <div className="flex flex-col w-[70%] ml-90 mt-36 mb-10 overflow-y-auto pb-1">
+        <StudentSchedulePage />
       </div>
     </div>
   );

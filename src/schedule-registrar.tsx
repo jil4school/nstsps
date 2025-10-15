@@ -126,7 +126,7 @@ export function ScheduleContent() {
             course_id: s.course_id,
           }));
           setSchedules(mapped);
-          console.log("Schedules loaded:", data);
+          console.log("✅ Schedules loaded:", mapped);
         } else {
           setSchedules([]);
         }
