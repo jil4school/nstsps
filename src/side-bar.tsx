@@ -98,7 +98,7 @@ function SideBar() {
             </Link>
           </div>
 
-          <hr className="w-full h-2 mt-25" />
+          <hr className="w-full h-2 mt-15" />
           <div className="flex flex-row items-center mt-5">
             <Icon
               icon="mdi:logout"
