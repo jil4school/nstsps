@@ -24,6 +24,7 @@ import { StudentGradeRecords } from "./student-grades";
 import ChangePasswordAdmin from "./change-password-admin";
 import StudentDetailsPage from "./master-file-admin-edit";
 import { AdminMasterFileProvider } from "./context/admin-master-file-context";
+import ScheduleDisplay from "./schedule-display";
 
 const routes = [
   { path: "/nstsps", element: <LandingPage /> },
@@ -37,6 +38,7 @@ const routes = [
     path: "/nstsps/student-info/grades-display",
     element: <GradesDisplay />,
   },
+  { path: "/nstsps/student-info/schedule", element: <ScheduleDisplay /> },
   {
     path: "/nststs/student-info/grades-display",
     element: <StudentHome />,
@@ -93,6 +95,7 @@ const routes = [
       </AdminMasterFileProvider>
     ),
   },
+  
 ];
 
 function App() {

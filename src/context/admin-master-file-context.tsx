@@ -37,6 +37,24 @@ interface AdminMasterFileContextType {
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   updateAdminStudentInfo: (data: Partial<StudentInfo>) => Promise<void>;
+  insertSchedule: (data: {
+    program_id: string;
+    year_level: string;
+    semester: string;
+    school_year: string;
+    schedules: {
+      title: string;
+      start: string;
+      end: string;
+      day: string;
+    }[];
+  }) => Promise<void>; // ✅ add this
+  fetchSchedules: (
+    programId: string,
+    yearLevel: string,
+    sem: string,
+    schoolYear: string
+  ) => Promise<void>;
 }
 
 const AdminMasterFileContext = createContext<
@@ -98,9 +116,90 @@ export const AdminMasterFileProvider = ({
     }
   };
 
+  // Insert schedule data
+  const insertSchedule = async (data: {
+    program_id: string;
+    year_level: string;
+    semester: string;
+    school_year: string;
+    schedules: {
+      title: string;
+      start: string;
+      end: string;
+      day: string;
+    }[];
+  }) => {
+    try {
+      const payload = {
+        action: "insert_schedule",
+        ...data,
+      };
+
+      const response = await axios.post(
+        "http://localhost/NSTSPS_API/controller/ScheduleController.php",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success(
+          response.data.message || "Schedule inserted successfully!"
+        );
+      } else {
+        toast.error(response.data.error || "Failed to insert schedule");
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Schedule insertion failed";
+      setError(message);
+      toast.error(message);
+    }
+  };
+  const fetchSchedules = async (
+    programId: string,
+    yearLevel: string,
+    sem: string,
+    schoolYear: string
+  ): Promise<void> => {
+    try {
+      const response = await axios.get(
+        `http://localhost/NSTSPS_API/controller/ScheduleController.php`,
+        {
+          params: {
+            program_id: programId,
+            year_level: yearLevel,
+            sem,
+            school_year: schoolYear,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        console.log("Fetched schedules:", response.data.schedules);
+        // TODO: setSchedules(response.data.schedules); ← if you’ll use state to render in table
+      } else {
+        console.warn("No schedules found");
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch schedules:", err.message);
+    }
+  };
+
   return (
     <AdminMasterFileContext.Provider
-      value={{ student, fetchStudentById, error, setError, updateAdminStudentInfo }}
+      value={{
+        student,
+        fetchStudentById,
+        error,
+        setError,
+        updateAdminStudentInfo,
+        insertSchedule, // ✅ add this
+        fetchSchedules,
+      }}
     >
       {children}
     </AdminMasterFileContext.Provider>

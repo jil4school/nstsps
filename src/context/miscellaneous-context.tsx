@@ -26,6 +26,7 @@ interface ProgramContextType {
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
   fetchGroupedProgramCourses: (programId: string) => Promise<void>; // ✅ new
+  fetchFilteredProgramCourses: (programId: string, yearLevel: string, sem: string) => Promise<void>;
 }
 
 const ProgramContext = createContext<ProgramContextType | undefined>(undefined);
@@ -107,6 +108,37 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
       toast.error(message);
     }
   };
+  const fetchFilteredProgramCourses = async (
+    programId: string,
+    yearLevel: string,
+    sem: string
+  ): Promise<void> => {
+    try {
+      const response = await axios.get(
+        `http://localhost/NSTSPS_API/controller/ProgramCoursessController.php`,
+        {
+          params: { program_id: programId, year_level: yearLevel, sem },
+        }
+      );
+
+      if (Array.isArray(response.data)) {
+        setProgramCourses(response.data);
+        setError(null);
+      } else {
+        setProgramCourses([]);
+        toast.error("No courses found for this combination.");
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ??
+        err.message ??
+        "Failed to fetch filtered courses.";
+      setError(message);
+      setProgramCourses([]);
+      toast.error(message);
+    }
+  };
+  
 
   const value: ProgramContextType = {
     programs,
@@ -116,6 +148,7 @@ export const ProgramProvider = ({ children }: { children: ReactNode }) => {
     error,
     setError,
     fetchGroupedProgramCourses,
+    fetchFilteredProgramCourses,
   };
 
   return (

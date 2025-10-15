@@ -52,6 +52,7 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { SelectContent } from "@radix-ui/react-select";
+import SchedulingPage from "./schedule-registrar";
 
 export type StudentInfo = {
   user_id: string;
@@ -360,6 +361,7 @@ export function StudentTableRegistrar() {
   const [activeTab, setActiveTab] = React.useState<
     | "students"
     | "courses"
+    | "schedules"
     | "pending requests"
     | "processing requests"
     | "archive requests"
@@ -526,6 +528,7 @@ export function StudentTableRegistrar() {
         {[
           { label: "Students", value: "students" },
           { label: "Courses", value: "courses" },
+          { label: "Schedules", value: "schedules" }, // <-- new tab
           { label: "Pending Requests", value: "pending requests" },
           { label: "Processing Requests", value: "processing requests" },
           { label: "Archive Requests", value: "archive requests" },
@@ -567,14 +570,14 @@ export function StudentTableRegistrar() {
               ))}
             </SelectContent>
           </Select>
-        ) : (
+        ) : activeTab !== "schedules" ? (
           <Input
             placeholder="Search..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
           />
-        )}
+        ) : null}
 
         {activeTab === "students" && (
           <Link to="/nstsps/registrar/student-registration">
@@ -584,6 +587,7 @@ export function StudentTableRegistrar() {
           </Link>
         )}
       </div>
+
       {activeTab === "courses" ? (
         <div className="space-y-8 mb-5">
           {["1st Year", "2nd Year", "3rd Year", "4th Year"].map((year) => (
@@ -677,6 +681,10 @@ export function StudentTableRegistrar() {
               </div>
             </div>
           ))}
+        </div>
+      ) : activeTab === "schedules" ? (
+        <div className="mb-5">
+          <SchedulingPage />
         </div>
       ) : (
         <>

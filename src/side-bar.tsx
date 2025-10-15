@@ -15,6 +15,7 @@ function SideBar() {
       path: "/nstsps/student-info/registration-details",
     },
     { label: "Grades Display", path: "/nstsps/student-info/grades-display" },
+    { label: "Schedule", path: "/nstsps/student-info/schedule" }, // ✅ NEW ITEM HERE
     { label: "Request Form", path: "/nstsps/student-services/request-form" },
     { label: "Accounting", path: "/nstsps/student-services/accounting" },
     { label: "Change Own Password", path: "/nstsps/utilities/change-password" },
@@ -31,18 +32,16 @@ function SideBar() {
             Student Information
           </span>
           <div className="flex flex-col pl-10">
-            {menuItems.slice(0, 3).map((item) => (
+            {/* Render Master File, Registration Details, Grades Display, and Schedule */}
+            {menuItems.slice(0, 4).map((item) => (
               <Link key={item.label} to={item.path}>
                 <Button
                   variant="link"
-                  className={`
-                    text-xl justify-start cursor-pointer w-full text-left
-                    ${
-                      currentPath === item.path
-                        ? "rounded-none rounded-l-3xl bg-white"
-                        : ""
-                    }
-                  `}
+                  className={`text-xl justify-start cursor-pointer w-full text-left ${
+                    currentPath === item.path
+                      ? "rounded-none rounded-l-3xl bg-white"
+                      : ""
+                  }`}
                   style={{
                     color: currentPath === item.path ? "#00ACED" : "#ffffff",
                   }}
@@ -52,22 +51,20 @@ function SideBar() {
               </Link>
             ))}
           </div>
+
           <span className="my-class text-white text-2xl mt-10">
             Student Services
           </span>
           <div className="flex flex-col pl-10">
-            {[3, 4].map((index) => (
+            {[4, 5].map((index) => (
               <Link to={menuItems[index].path} key={index}>
                 <Button
                   variant="link"
-                  className={`
-          text-xl justify-start cursor-pointer w-full text-left
-          ${
-            currentPath === menuItems[index].path
-              ? "rounded-none rounded-l-3xl bg-white"
-              : ""
-          }
-        `}
+                  className={`text-xl justify-start cursor-pointer w-full text-left ${
+                    currentPath === menuItems[index].path
+                      ? "rounded-none rounded-l-3xl bg-white"
+                      : ""
+                  }`}
                   style={{
                     color:
                       currentPath === menuItems[index].path
@@ -83,27 +80,25 @@ function SideBar() {
 
           <span className="my-class text-white text-2xl mt-10">Utilities</span>
           <div className="flex flex-col pl-10">
-            <Link to={menuItems[5].path}>
+            <Link to={menuItems[6].path}>
               <Button
                 variant="link"
-                className={`
-                  text-xl justify-start cursor-pointer w-full text-left
-                  ${
-                    currentPath === menuItems[5].path
-                      ? "rounded-none rounded-l-3xl bg-white"
-                      : ""
-                  }
-                `}
+                className={`text-xl justify-start cursor-pointer w-full text-left ${
+                  currentPath === menuItems[6].path
+                    ? "rounded-none rounded-l-3xl bg-white"
+                    : ""
+                }`}
                 style={{
                   color:
-                    currentPath === menuItems[5].path ? "#00ACED" : "#ffffff",
+                    currentPath === menuItems[6].path ? "#00ACED" : "#ffffff",
                 }}
               >
-                {menuItems[5].label}
+                {menuItems[6].label}
               </Button>
             </Link>
           </div>
-          <hr className="w-full h-2 mt-25"></hr>
+
+          <hr className="w-full h-2 mt-25" />
           <div className="flex flex-row items-center mt-5">
             <Icon
               icon="mdi:logout"
@@ -122,6 +117,7 @@ function SideBar() {
           </div>
         </div>
       </div>
+
       <img
         src={sidebarlogo}
         alt="Logo"
