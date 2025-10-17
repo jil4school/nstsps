@@ -4,7 +4,11 @@ import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 interface StudentInfo {
-  registration_id(registration_id: any, master_file_id: any, user_id: string): unknown;
+  registration_id(
+    registration_id: any,
+    master_file_id: any,
+    user_id: string
+  ): unknown;
   street: string | undefined;
   barangay: string | undefined;
   region: string | undefined;
@@ -55,7 +59,8 @@ interface AdminMasterFileContextType {
     yearLevel: string,
     sem: string,
     schoolYear: string
-  ) => Promise<void>;
+  ) => Promise<any[]>;
+  deleteSchedule: (scheduleId: number) => Promise<void>; // ✅ add this
 }
 
 const AdminMasterFileContext = createContext<
@@ -181,15 +186,40 @@ export const AdminMasterFileProvider = ({
       );
 
       if (response.data.success) {
-        console.log("Fetched schedules:", response.data.schedules);
         return response.data.schedules; // ✅ return data
       } else {
-        console.warn("No schedules found");
-        return []; // ✅ return empty array instead of undefined
+       
+        return []; 
       }
     } catch (err: any) {
       console.error("Failed to fetch schedules:", err.message);
       return []; // ✅ prevent crash
+    }
+  };
+  const deleteSchedule = async (scheduleId: number) => {
+    try {
+      const response = await axios.delete(
+        "http://localhost/NSTSPS_API/controller/ScheduleController.php",
+        {
+          data: { schedule_id: scheduleId },
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success(
+          response.data.message || "Schedule deleted successfully!"
+        );
+      } else {
+        toast.error(response.data.error || "Failed to delete schedule");
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error ?? err.message ?? "Schedule deletion failed";
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -203,6 +233,7 @@ export const AdminMasterFileProvider = ({
         updateAdminStudentInfo,
         insertSchedule, // ✅ add this
         fetchSchedules,
+        deleteSchedule,
       }}
     >
       {children}

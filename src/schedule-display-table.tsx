@@ -31,9 +31,6 @@ function ScheduleDisplayTable() {
       setLoading(true);
       try {
         const student = await fetchStudentById(String(user.user_id));
-        console.log("👤 Logged in user:", user);
-        console.log("🎓 Student info:", student);
-
         if (!student) {
           console.warn("No student data found.");
           setSchedules([]);
@@ -54,7 +51,6 @@ function ScheduleDisplayTable() {
           latestReg = fetchedReg;
         }
 
-        console.log("🧾 Latest registration:", latestReg);
 
         if (!latestReg) {
           console.warn("No registration record found for this student.");
@@ -73,7 +69,6 @@ function ScheduleDisplayTable() {
           String(school_year ?? "")
         );
 
-        console.log("🗓️ Fetched schedules:", fetched);
 
         setSchedules(Array.isArray(fetched) ? fetched : []);
       } catch (err) {

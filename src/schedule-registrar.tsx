@@ -34,6 +34,11 @@ export function ScheduleContent() {
 
   const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
   const semesters = ["First Semester", "Second Semester"];
+  const [hoveredSchedule, setHoveredSchedule] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
+    null
+  );
 
   const timeSlots = [
     "7:00–7:30",
@@ -63,12 +68,14 @@ export function ScheduleContent() {
   ];
 
   type Schedule = {
+    schedule_id: number;
     title: string;
     start: string;
     end: string;
     day: string;
   };
-  const { insertSchedule, fetchSchedules } = useAdminMasterFile();
+  const { insertSchedule, fetchSchedules, deleteSchedule } =
+    useAdminMasterFile();
 
   const [schoolYearFrom, setSchoolYearFrom] = useState("2024");
   const [schoolYearTo, setSchoolYearTo] = useState("2025");
@@ -119,6 +126,7 @@ export function ScheduleContent() {
         );
         if (Array.isArray(data) && data.length > 0) {
           const mapped = data.map((s) => ({
+            schedule_id: s.schedule_id,
             title: s.course_description,
             start: s.start_time,
             end: s.end_time,
@@ -126,7 +134,6 @@ export function ScheduleContent() {
             course_id: s.course_id,
           }));
           setSchedules(mapped);
-          console.log("✅ Schedules loaded:", mapped);
         } else {
           setSchedules([]);
         }
@@ -138,7 +145,28 @@ export function ScheduleContent() {
 
     loadSchedules();
   }, [program, yearLevel, semester, schoolYearFrom, schoolYearTo]);
+  const handleDelete = async () => {
+    if (!selectedSchedule) return;
 
+    try {
+      await deleteSchedule(selectedSchedule.schedule_id); // or sched.schedule_id if available
+
+      // Remove from local state instantly
+      setSchedules((prev) =>
+        prev.filter(
+          (s) =>
+            !(
+              s.day === selectedSchedule.day &&
+              s.start === selectedSchedule.start &&
+              s.end === selectedSchedule.end
+            )
+        )
+      );
+
+      setShowDeleteDialog(false);
+    } catch (error) {
+    }
+  };
   function timeToMinutes(t: string) {
     if (!t) return 0;
     // Normalize all dash types and ensure HH:mm:ss or HH:mm format
@@ -152,9 +180,6 @@ export function ScheduleContent() {
     const [slotStartRaw] = slot.replace(/[–-]/g, "-").split("-");
     const slotStart = timeToMinutes(slotStartRaw);
 
-    console.log("🕒 Checking slot:", slot, "for day:", day);
-    console.log("📅 Available schedules:", schedules);
-
     const match = schedules.find((s) => {
       const schedDay = (s.day || "").trim().toLowerCase();
       const schedStart = timeToMinutes(s.start);
@@ -163,19 +188,6 @@ export function ScheduleContent() {
 
       const isDayMatch = schedDay === slotDay;
       const isTimeMatch = slotStart >= schedStart && slotStart < schedEnd;
-
-      console.log({
-        slot,
-        slotStart,
-        schedDay,
-        sStart: s.start,
-        schedStart,
-        sEnd: s.end,
-        schedEnd,
-        isDayMatch,
-        isTimeMatch,
-        course: s.title,
-      });
 
       return isDayMatch && isTimeMatch;
     });
@@ -275,10 +287,7 @@ export function ScheduleContent() {
 
     try {
       await insertSchedule(payload);
-      toast.success("Schedule inserted successfully!");
     } catch (err: any) {
-      console.error("Error inserting schedule:", err);
-      toast.error("Failed to insert schedule");
     }
   };
 
@@ -393,7 +402,28 @@ export function ScheduleContent() {
                     <td key={day} className="p-3 border-b">
                       {match ? (
                         isFirstSlotOfSchedule(day, slot, match) ? (
-                          <span className="font-medium">{match.title}</span> // ✅ will show even 7:00–19:00
+                          <div
+                            className="relative group font-medium"
+                            onMouseEnter={() =>
+                              setHoveredSchedule(`${day}-${match.start}`)
+                            }
+                            onMouseLeave={() => setHoveredSchedule(null)}
+                          >
+                            {match.title}
+
+                            {/* ❌ delete button visible only on hover */}
+                            {hoveredSchedule === `${day}-${match.start}` && (
+                              <button
+                                onClick={() => {
+                                  setSelectedSchedule(match);
+                                  setShowDeleteDialog(true);
+                                }}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 text-red-500 text-xs bg-white border border-red-400 rounded-full px-1 hover:bg-red-100"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-gray-500 italic">-do-</span>
                         )
@@ -485,6 +515,46 @@ export function ScheduleContent() {
               onClick={addSchedule}
             >
               Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-white max-w-sm rounded-xl shadow-lg p-6">
+          <DialogHeader className="text-center space-y-1">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Delete Schedule
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4 mb-6 text-center">
+            <p className="text-gray-700">
+              Are you sure you want to remove{" "}
+              <span className="font-medium text-gray-900">
+                {selectedSchedule?.title}
+              </span>{" "}
+              scheduled on{" "}
+              <span className="font-medium text-gray-900">
+                {selectedSchedule?.day}
+              </span>{" "}
+              ({selectedSchedule?.start}–{selectedSchedule?.end})?
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              className="w-24 border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              className="w-28 bg-red-600 text-white hover:bg-red-700 font-medium"
+            >
+              Delete
             </Button>
           </div>
         </DialogContent>
